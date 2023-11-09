@@ -1,0 +1,13 @@
+
+mod idk where
+    val so = 5
+
+let
+    let
+        mod idk where
+            val so = 10
+    in
+        mod cool = idk
+in
+    cool.so
+    
