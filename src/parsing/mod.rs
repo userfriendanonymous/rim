@@ -3,7 +3,7 @@ use space::value as space;
 use path::value as path;
 use val::value as val;
 use ident::value as ident;
-
+use comment::value as comment;
 use crate::syntax;
 
 pub mod ident;
@@ -12,6 +12,7 @@ pub mod path;
 pub mod space;
 pub mod module;
 pub mod function;
+pub mod comment;
 
 pub fn value(ind: u16) -> impl Parser<char, Vec<syntax::module::Item>, Error = Simple<char>> {
     space(ind)

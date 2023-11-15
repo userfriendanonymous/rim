@@ -2,6 +2,9 @@ use chumsky::{Parser, text::keyword, prelude::Simple, primitive::just};
 use crate::syntax::val::Value;
 use super::{space, path, module, function};
 
+mod string;
+mod number;
+
 pub fn value(ind: u16) -> impl Parser<char, Value, Error = Simple<char>> + Clone + Sized {
     let let_in = |ind| module::value(ind + 1)
         .then_with(move |bindings| {
@@ -23,12 +26,18 @@ pub fn value(ind: u16) -> impl Parser<char, Value, Error = Simple<char>> + Clone
                     .ignore_then(let_in(ind).boxed())
             )
             .or(
+                number::value().map(Value::Number)
+            )
+            .or(
                 path::value(ind).map(Value::Ref).boxed()
             )
             .or(
                 just('\\')
                     .ignored()
                     .then_with(move |_| function::value(ind).boxed())
+            )
+            .or(
+                string::value(ind).map(Value::String)
             );
             
     let call = |ind| level1(ind)

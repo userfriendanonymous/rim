@@ -12,9 +12,10 @@ pub mod module;
 pub mod globe;
 pub mod id;
 pub mod r#type;
+// pub mod type_check;
 
 pub fn value<'a>(input: &'a [syntax::module::Item]) -> Result<(Env, Globe), module::Error<'a>> {
-    let mut globe = Globe::default();
+    let mut globe = Globe::new();
     let env = module::r#where(input, module::Where::default(), &mut globe)?;
     Ok((env, globe))
 }

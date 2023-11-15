@@ -17,6 +17,8 @@ pub enum Out {
     ProductInit(TypeId),
     SumMatch(TypeId),
     ProductField(usize, TypeId),
+    String(String),
+    Number(syntax::Number)
 }
 
 #[derive(Clone, Debug)]
@@ -45,6 +47,12 @@ pub fn out<'a>(input: &'a syntax::Val, env: Env, globe: &mut Globe) -> Result<Ou
         syntax::Val::LetIn(input, output) => {
             let input = module::r#where(input, env.clone(), globe).map_err(|e| E::LetInInput(Box::new(e)))?;
             Out::LetIn(input.clone(), Box::new(out(output.as_ref(), env.clone().append(input), globe)?))
+        },
+        syntax::Val::String(v) => {
+            Out::String(v.clone())
+        },
+        syntax::Val::Number(v) => {
+            Out::Number(v.clone())
         }
     })
 }

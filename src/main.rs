@@ -16,16 +16,20 @@ let
         mod unit where
             pro new
     in
+        # amazing module about booleans! #
         mod bool where
-            let
-                sum match true false
+            let #! idk !#
+                sum match true false # cool #
             in
                 val match t f = match (\v = t) (\v = f)
                 val true = true unit.new
                 val false = false unit.new
+                val coolio = "hello guys!!"
+                val faeijf = 105
         mod unit = unit
 in
     val main = unit.new
+    val amazing #@@ cool wow impressive # @ @@# = 124
 "#;
 
 fn main() {

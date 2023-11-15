@@ -4,4 +4,6 @@ pub enum Value {
     Sum(usize),
     Product(usize),
     Enum(usize),
+    Number,
+    String,
 }

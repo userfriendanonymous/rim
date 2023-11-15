@@ -25,18 +25,17 @@ impl TypeId {
     pub fn unwrap(&self) -> Id { self.0 }
 }
 
-#[derive(Default)]
-pub struct Value {
+#[derive(Clone, Debug, Default)]
+pub struct Store {
     modules: BTreeMap<ModuleId, Module>,
     types: BTreeMap<TypeId, Type>,
     vals: BTreeMap<ValId, Val>,
     val_id: ValId,
     module_id: ModuleId,
     type_id: TypeId,
-    main_val_id: Option<ValId>,
 }
 
-impl Value {
+impl Store {
     pub fn val(&self, id: &ValId) -> &Val {
         self.vals.get(id).unwrap()
     }
@@ -110,6 +109,88 @@ impl Value {
         self.types.insert(id, value);
         self.type_id = self.type_id.succ();
         id
+    }
+}
+
+
+
+
+#[derive(Clone, Debug)]
+pub struct BuiltIns {
+    pub string_type_id: TypeId,
+    pub number_type_id: TypeId,
+}
+
+#[derive(Clone, Debug)]
+pub struct Value {
+    store: Store,
+    main_val_id: Option<ValId>,
+    built_ins: BuiltIns
+}
+
+impl Value {
+    pub fn new() -> Self {
+        let mut store = Store::default();
+
+        let string_type_id = store.new_type(Type::String);
+        let number_type_id = store.new_type(Type::Number);
+
+        Self {
+            main_val_id: None,
+            built_ins: BuiltIns {
+                number_type_id,
+                string_type_id
+            },
+            store,
+        }
+    }
+
+    pub fn built_ins(&self) -> &BuiltIns {
+        &self.built_ins
+    }
+
+    pub fn val(&self, id: &ValId) -> &Val {
+        self.store.val(id)
+    }
+
+    pub fn val_out(&self, id: &ValId) -> &val::Out {
+        self.store.val_out(id)
+    }
+
+    pub fn module(&self, id: &ModuleId) -> &Module {
+        self.store.module(id)
+    }
+
+    pub fn module_where(&self, id: &ModuleId) -> &module::Where {
+        self.store.module_where(id)
+    }
+
+    pub fn r#type(&self, id: &TypeId) -> &Type {
+        self.store.r#type(id)
+    }
+
+    pub fn sum_type(&self, id: &TypeId) -> &usize {
+        self.store.sum_type(id)
+    }
+
+    pub fn product_type(&self, id: &TypeId) -> &usize {
+        self.store.product_type(id)
+    }
+
+    pub fn enum_type(&self, id: &TypeId) -> &usize {
+        self.store.enum_type(id)
+    }
+
+    pub fn new_val(&mut self, value: Val) -> ValId {
+        self.store.new_val(value)
+    }
+
+    pub fn new_module(&mut self, value: Module) -> ModuleId {
+        self.store.new_module(value)
+    }
+
+    pub fn new_type(&mut self, value: Type) -> TypeId {
+        self.store.new_type(value)
     }
 
     pub fn set_main_val_id(&mut self, id: ValId) {

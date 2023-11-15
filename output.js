@@ -39,6 +39,8 @@ let v1 = $0 => $1 => $sum => { if ($sum[0] == 0) { return $0($sum[1]) } else if 
 // vals
 let v9 = v2(v0)
 let v10 = v3(v0)
+let v11 = "hello guys!!"
+let v12 = 105
 let v8 = v4 => v5 => v1(v6 => v4)(v7 => v5)
 
 // end
@@ -50,6 +52,7 @@ let v8 = v4 => v5 => v1(v6 => v4)(v7 => v5)
 // modules
 
 // vals
-let v11 = v0
+let v14 = 124
+let v13 = v0
 
 // end

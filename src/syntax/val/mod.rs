@@ -1,4 +1,4 @@
-use super::{Function, Path, module};
+use super::{Function, Path, module, Number};
 
 #[derive(Clone, Debug)]
 pub enum Value {
@@ -6,4 +6,6 @@ pub enum Value {
     LetIn(Vec<module::Item>, Box<Value>),
     Function(Box<Function>),
     Ref(Path),
+    String(String),
+    Number(Number),
 }
