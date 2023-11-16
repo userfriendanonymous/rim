@@ -102,7 +102,7 @@ pub fn value(ind: u16) -> impl Parser<char, Vec<Item>, Error = Simple<char>> {
     let let_in = |ind: u16| value(ind + 1).boxed()
         .then_ignore(space(ind))
         .then_ignore(keyword("in"))
-        .then(value(ind + 1).boxed())
+        .then(value(ind).boxed())
         .map(|(input, output)| Item::LetIn(input, output));
     
     space(ind)

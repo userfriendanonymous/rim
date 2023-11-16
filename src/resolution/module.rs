@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 use super::{Val, Globe, val, Type, globe::{ModuleId, ValId}};
-use crate::syntax::{self, Ident, Path};
+use crate::syntax::{self, Ident, Path, ident};
 
 #[derive(Clone, Debug)]
 pub enum Value {
@@ -22,6 +22,10 @@ pub struct Where {
 }
 
 impl Where {
+    pub fn main_val(&self) -> Option<&ValId> {
+        self.val(&ident::main())
+    }
+
     pub fn modules(&self) -> &BTreeMap<Ident, ModuleId> {
         &self.modules
     }
