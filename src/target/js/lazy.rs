@@ -67,16 +67,16 @@ pub fn wrap_val_out(unwrapped: String) -> String {
 
 pub fn val_out(value: &val::Out, globe: &Globe) -> String {
     match value {
-        val::Out::Call(f, input) => unwrap_val_out(format!("({})({})", val_out(f, globe), wrap_val_out(val_out(&input, globe)))),
-        val::Out::Function(input, output) => format!("{} => {}", id(&input.unwrap()), wrap_val_out(val_out(&output, globe))),
+        val::Out::Call(f, input) => unwrap_val_out(format!("{}({})", val_out(f, globe), wrap_val_out(val_out(&input, globe)))),
+        val::Out::Function(input, output) => format!("({} => {})", id(&input.unwrap()), wrap_val_out(val_out(&output, globe))),
         val::Out::Ref(v) => unwrap_val_out(id(&v.unwrap())),
         val::Out::LetIn(input, output) => format!("
-            (() => {{ {}; return {} }})()",
+            (() => {{ {}return ({}) }})()",
             self::module(input, globe),
             val_out(output, globe)
         ),
         val::Out::SumInit(field_id, _) => {
-            format!("$ => {}", wrap_val_out(format!("[{field_id}, $]")))
+            format!("($ => {})", wrap_val_out(format!("[{field_id}, $]")))
         },
         val::Out::SumMatch(type_id) => {
             let len = globe.sum_type(type_id);
@@ -94,11 +94,11 @@ pub fn val_out(value: &val::Out, globe: &Globe) -> String {
                     "$sum => {{ let $value = {}; {output} }}",
                     unwrap_val_out("$sum".into())
                 ),
-                |output, input_idx| format!("${input_idx} => {}", wrap_val_out(output))
+                |output, input_idx| format!("(${input_idx} => {})", wrap_val_out(output))
             )
         },
         val::Out::ProductField(field_id, _) => format!(
-            "$value => {}",
+            "($value => {})",
             format!("{}[{field_id}]", unwrap_val_out("$value".into()))
         ),
         val::Out::ProductInit(type_id) => {
@@ -109,7 +109,7 @@ pub fn val_out(value: &val::Out, globe: &Globe) -> String {
 
             (0..*len).rev().fold(
                 format!("[{fields}]"),
-                |output, input_idx| format!("${input_idx} => {}", wrap_val_out(output))
+                |output, input_idx| format!("(${input_idx} => {})", wrap_val_out(output))
             )
         },
         val::Out::String(v) => {

@@ -40,7 +40,13 @@ in let
             isleft = isleft
             isright v = bool.not (isleft v)
 in
-    val main = either.isleft (either.left ((\f = f f) (\f = f f)))
+    val idk = either.isleft (either.left ((\f = f f) (\f = f f)))
+    val main =
+        val
+            cool = 1000
+        in val
+            idk = cool
+        in idk
 "#;
 
 fn main() {

@@ -20,8 +20,8 @@ enum ModuleType {
     Ref
 }
 
-pub fn value(ind: u16) -> impl Parser<char, Vec<Item>, Error = Simple<char>> {
-    let val = |ind: u16| space(ind + 1)
+pub fn val(ind: u16) -> impl Parser<char, Vec<Item>, Error = Simple<char>> {
+    space(ind + 1)
         .then_with(|ind| {
             let ind = ind + 1;
             ident()
@@ -29,8 +29,10 @@ pub fn value(ind: u16) -> impl Parser<char, Vec<Item>, Error = Simple<char>> {
                 .then(function::value(ind))
                 .map(|(name, value)| Item::Val(name, value))
         })
-        .repeated();
+        .repeated()
+}
 
+pub fn value(ind: u16) -> impl Parser<char, Vec<Item>, Error = Simple<char>> {
     let module = |ind: u16| space(ind + 1)
         .then_with(|ind| {
             let ind = ind + 1;

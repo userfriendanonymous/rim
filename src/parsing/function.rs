@@ -7,7 +7,6 @@ pub fn value(ind: u16) -> impl Parser<char, Val, Error = Simple<char>> {
         .then_ignore(space(ind))
         .repeated()
         .then_ignore(just('='))
-        .then_ignore(space(ind))
         .then(val(ind).boxed())
         .foldr(|input, output| Val::Function(Box::new(Value { input, output })))
 }
