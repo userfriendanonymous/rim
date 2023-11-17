@@ -1,4 +1,5 @@
 use std::{fs::File, io::Write};
+use ariadne::{Label, Source};
 use chumsky::Parser;
 
 mod parsing;
@@ -42,26 +43,55 @@ in let
 in
     val idk = either.isleft (either.left ((\f = f f) (\f = f f)))
     val main =
-        val
-            cool = 1000
-        in val
-            idk = cool
-        in idk
+        val cool = 10
+        in cool
+"#;
+
+const CODE_: &str =
+r#"
+let
+ mod idk where
+  let val
+   so =
+    5
+   idk = 10
+  in val
+   x = 10
+in val
+ main = idk.x
 "#;
 
 fn main() {
-    let parser = parsing::value(0);
-    let syntax = parser.parse(CODE).unwrap();
+    let parser = parsing::value(Default::default());
+    let syntax = parser.parse(CODE);
 
-    write_string_to_file("syntax.js", &format!("{:#?}", &syntax));
+    match syntax {
+        Ok(syntax) => {
+            write_string_to_file("syntax.js", &format!("{:#?}", &syntax));
 
-    let (env, globe) = resolution::value(&syntax).unwrap();
+            let (env, globe) = resolution::value(&syntax).unwrap();
 
-    write_string_to_file("lazy-output.js", &target::js::lazy::value(&env, &globe));
-    write_string_to_file("strict-output.js", &target::js::strict::value(&env, &globe));
+            write_string_to_file("lazy-output.js", &target::js::lazy::value(&env, &globe));
+            write_string_to_file("strict-output.js", &target::js::strict::value(&env, &globe));
 
-    let mut file = File::create("syntax.js").unwrap();
-    file.write_all(format!("{syntax:?}").as_bytes()).unwrap();
+            let mut file = File::create("syntax.js").unwrap();
+            file.write_all(format!("{syntax:?}").as_bytes()).unwrap();
+        },
+        Err(errors) => {
+            for error in errors {
+                ariadne::Report::build(ariadne::ReportKind::Error, (), 0)
+                    .with_message(&error.to_string())
+                    .with_label(
+                        Label::new(error.span())
+                        .with_message("Here")
+                    )
+                    .with_note("Note!")
+                    .finish()
+                    .print(Source::from(CODE.clone()))
+                    .unwrap();
+            }
+        }
+    }
 }
 
 fn write_string_to_file(path: &str, data: &str) {

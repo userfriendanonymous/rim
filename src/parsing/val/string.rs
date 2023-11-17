@@ -1,9 +1,9 @@
-use chumsky::{Parser, prelude::Simple, primitive::{any, custom, just}};
+use chumsky::{Parser, prelude::Simple, primitive::{any, just}};
 
-use crate::parsing::space;
+use crate::parsing::{space, space::IndentBound};
 
 
-pub fn value(ind: u16) -> impl Parser<char, String, Error = Simple<char>> + Clone + Sized {
+pub fn value(ind: IndentBound) -> impl Parser<char, String, Error = Simple<char>> + Clone + Sized {
     just('"')
         .ignore_then(
             just('\n')

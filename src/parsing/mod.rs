@@ -5,6 +5,7 @@ use val::value as val;
 use ident::value as ident;
 use comment::value as comment;
 use crate::syntax;
+use space::IndentBound;
 
 pub mod ident;
 pub mod val;
@@ -14,7 +15,7 @@ pub mod module;
 pub mod function;
 pub mod comment;
 
-pub fn value(ind: u16) -> impl Parser<char, Vec<syntax::module::Item>, Error = Simple<char>> {
+pub fn value(ind: IndentBound) -> impl Parser<char, Vec<syntax::module::Item>, Error = Simple<char>> {
     space(ind)
         .ignore_then(module::value(ind))
         .then_ignore(space(ind))

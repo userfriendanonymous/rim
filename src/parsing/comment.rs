@@ -1,9 +1,9 @@
 use chumsky::{Parser, error::Simple, primitive::{just, any}};
 
-use super::space;
+use super::space::{self, IndentBound};
 
 
-pub fn value(ind: u16) -> impl Parser<char, String, Error = Simple<char>> + Clone + Sized {
+pub fn value(ind: IndentBound) -> impl Parser<char, String, Error = Simple<char>> + Clone + Sized {
     just('#')
         .ignore_then(
             any()

@@ -23,11 +23,9 @@ let v27 = [() => $unwrap(v23)]
 let v25 = [() => $unwrap(v19)]
 let v24 = [() => $unwrap(v18)]
 let v32 = [() => $unwrap($unwrap(v27)([() => $unwrap($unwrap(v25)([() => $unwrap((v30 => [() => $unwrap($unwrap(v30)([() => $unwrap(v30)]))])([() => (v31 => [() => $unwrap($unwrap(v31)([() => $unwrap(v31)]))])]))]))]))]
-let v35 = [() => 
-            (() => { let v33 = [() => 1000]
-return (
-            (() => { let v34 = [() => $unwrap(v33)]
-return ($unwrap(v34)) })()) })()]
+let v34 = [() => 
+            (() => { let v33 = [() => 10]
+return ($unwrap(v33)) })()]
 
 // MAIN
-console.log($unwrap(v35))
+console.log($unwrap(v34))

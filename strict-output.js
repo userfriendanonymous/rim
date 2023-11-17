@@ -22,11 +22,9 @@ let v27 = v23
 let v25 = v19
 let v24 = v18
 let v32 = (v27)((v25)((v30 => (v30)(v30))(v31 => (v31)(v31))))
-let v35 = 
-            (() => { let v33 = 1000
-; return 
-            (() => { let v34 = v33
-; return v34 })() })()
+let v34 = 
+            (() => { let v33 = 10
+; return v33 })()
 
 // MAIN
-console.log(v35)
+console.log(v34)
