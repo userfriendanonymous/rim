@@ -25,7 +25,7 @@ let v29 = [() => $unwrap(v25)]
 let v27 = [() => $unwrap(v21)]
 let v26 = [() => $unwrap(v20)]
 let v32 = [() => $unwrap($unwrap(v1)([() => `
-This text will not be printed because the effect is not connected to the main function!
+This text will be printed because the effect is connected to the main function!
 `]))]
 let v33 = [() => $unwrap($unwrap($unwrap(v0)([() => $unwrap($unwrap($unwrap(v0)([() => $unwrap($unwrap(v1)([() => `hello!!`]))]))([() => $unwrap($unwrap(v1)([() => `lol, those effects are chained!`]))]))]))([() => $unwrap(v32)]))]
 

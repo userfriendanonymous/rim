@@ -41,7 +41,7 @@ in let
             isleft = isleft
             isright v = bool.not (isleft v)
 in let
-    val used = builtin.js.effect.console.log "
+    val usEdCool123Wow = builtin.js.effect.console.log "
         This text will be printed because the effect is connected to the main function!
         "
 in
@@ -49,7 +49,7 @@ in
         (builtin.js.effect.chain
             (builtin.js.effect.console.log "hello!!")
             (builtin.js.effect.console.log "lol, those effects are chained!"))
-            used
+            usEdCool123Wow
 "#;
 
 const CODE_: &str =

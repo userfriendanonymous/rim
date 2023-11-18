@@ -4,7 +4,7 @@ use crate::parsing::ident::value as parser;
 pub mod item;
 
 pub fn main() -> Value {
-    Value { others: vec![Item::M, Item::A, Item::I], last: Item::N }
+    "main".into()
 }
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]

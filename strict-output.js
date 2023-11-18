@@ -24,7 +24,7 @@ let v29 = v25
 let v27 = v21
 let v26 = v20
 let v32 = v1(`
-This text will not be printed because the effect is not connected to the main function!
+This text will be printed because the effect is connected to the main function!
 `)
 let v33 = v0(v0(v1(`hello!!`))(v1(`lol, those effects are chained!`)))(v32)
 
