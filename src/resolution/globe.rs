@@ -1,5 +1,6 @@
 use std::collections::BTreeMap;
 use super::{Id, Val, Module, Type, val, module};
+use crate::syntax::ident::from_str as ident;
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct ValId(Id);
@@ -119,6 +120,7 @@ impl Store {
 pub struct BuiltIns {
     pub string_type_id: TypeId,
     pub number_type_id: TypeId,
+    pub builtin_module_id: ModuleId,
 }
 
 #[derive(Clone, Debug)]
@@ -135,11 +137,31 @@ impl Value {
         let string_type_id = store.new_type(Type::String);
         let number_type_id = store.new_type(Type::Number);
 
+        use val::Out;
+        let builtin_module = Module::Where(module::Where::build(&mut store)
+            .nest_module("js", |m| {
+                use val::out::{js, Js};
+                m.nest_module("effect", |m| {
+                    use js::{Effect, effect};
+                    m
+                        .with_val("chain", Out::Js(Js::Effect(Effect::Chain)))
+                        .nest_module("console", |m| {
+                            use effect::Console;
+                            m
+                                .with_val("log", Out::Js(Js::Effect(Effect::Console(Console::Log))))
+                        })
+                })
+            })
+            .end());
+
+        let builtin_module_id = store.new_module(builtin_module);
+
         Self {
             main_val_id: None,
             built_ins: BuiltIns {
                 number_type_id,
-                string_type_id
+                string_type_id,
+                builtin_module_id,
             },
             store,
         }

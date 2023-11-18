@@ -1,5 +1,6 @@
+use chumsky::{Parser, primitive::end};
 pub use item::Value as Item;
-
+use crate::parsing::ident::value as parser;
 pub mod item;
 
 pub fn main() -> Value {
@@ -12,6 +13,15 @@ pub struct Value {
     pub others: Vec<Item>
 }
 
-impl Value {
-    
+pub fn from_str(s: &str) -> Value {
+    parser()
+        .then_ignore(end())
+        .parse(s)
+        .unwrap()
+}
+
+impl From<&str> for Value {
+    fn from(value: &str) -> Self {
+        from_str(value)
+    }
 }

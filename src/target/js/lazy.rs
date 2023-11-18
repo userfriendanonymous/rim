@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::resolution::{Env, Globe, val, Id, Module, module};
 
 pub fn value(env: &Env, globe: &Globe) -> String {
@@ -7,7 +9,7 @@ pub fn value(env: &Env, globe: &Globe) -> String {
     );
 
     let main = format!(
-        "console.log({})",
+        "{}()",
         unwrap_val_out(id(&env.main_val().unwrap().unwrap()))
     );
 
@@ -57,12 +59,16 @@ pub fn id(value: &Id) -> String {
     format!("v{}", value.unwrap().to_string())
 }
 
-pub fn unwrap_val_out(wrapped: String) -> String {
+pub fn unwrap_val_out<W: Display>(wrapped: W) -> String {
     format!("$unwrap({wrapped})")
 }
 
-pub fn wrap_val_out(unwrapped: String) -> String {
+pub fn wrap_val_out<U: Display>(unwrapped: U) -> String {
     format!("[() => {unwrapped}]")
+}
+
+pub fn function<I: Display, O: Display>(input: I, output: O) -> String {
+    format!("({input} => {})", wrap_val_out(output))
 }
 
 pub fn val_out(value: &val::Out, globe: &Globe) -> String {
@@ -75,7 +81,7 @@ pub fn val_out(value: &val::Out, globe: &Globe) -> String {
             self::module(input, globe),
             val_out(output, globe)
         ),
-        val::Out::SumInit(field_id, _) => {
+        val::Out::Sum(field_id, _) => {
             format!("($ => {})", wrap_val_out(format!("[{field_id}, $]")))
         },
         val::Out::SumMatch(type_id) => {
@@ -84,24 +90,24 @@ pub fn val_out(value: &val::Out, globe: &Globe) -> String {
             let output = (0..*len).rev().fold(
                 format!("{{ throw new Error('Sum type mismatch: $value[0] is not in range of possible branches!') }}"),
                 |prev, id| format!(
-                    "if ($value[0] == {id}) {{ return {}($value[1]) }} else {prev}",
-                    unwrap_val_out(format!("${id}"))
+                    "if ($value[0] == {id}) {{ return {} }} else {prev}",
+                    unwrap_val_out(format!("{}($value[1])", unwrap_val_out(format!("${id}"))))
                 )
             );
-
             (0..*len).rev().fold(
-                format!(
-                    "$sum => {{ let $value = {}; {output} }}",
-                    unwrap_val_out("$sum".into())
-                ),
+                function("$sum", format!(
+                    "{{ let $value = {}; {output} }}",
+                    unwrap_val_out("$sum")
+                )),
                 |output, input_idx| format!("(${input_idx} => {})", wrap_val_out(output))
             )
         },
-        val::Out::ProductField(field_id, _) => format!(
-            "($value => {})",
-            format!("{}[{field_id}]", unwrap_val_out("$value".into()))
-        ),
-        val::Out::ProductInit(type_id) => {
+        val::Out::ProductField(field_id, _) => {
+            function("$value", unwrap_val_out(format!(
+                "{}[{field_id}]", unwrap_val_out("$value")
+            )))
+        },
+        val::Out::Product(type_id) => {
             let len = globe.product_type(type_id);
             let fields = (0..*len).map(|id| format!(
                 "{}, ", format!("${id}")
@@ -117,19 +123,33 @@ pub fn val_out(value: &val::Out, globe: &Globe) -> String {
                 .map(|ch| {
                     if ch == '\\' {
                         "\\\\".into()
-                    } else if ch == '"' {
-                        "\\\"".into()
+                    } else if ch == '`' {
+                        "\\`".into()
                     } else {
                         ch.to_string()
                     }
                 })
                 .collect::<String>();
-            format!(r#""{content}""#)
+            format!(r#"`{content}`"#)
         },
         val::Out::Number(v) => {
             let items = v.items.iter().map(|item| item.to_str()).collect::<String>();
             let last = v.last.to_str();
             format!("{items}{last}")
+        },
+        val::Out::Js(v) => match v {
+            val::out::Js::Effect(v) => match v {
+                val::out::js::Effect::Console(v) => match v {
+                    val::out::js::effect::Console::Log => {
+                        format!("($ => {})", wrap_val_out(format!("() => console.log({})", unwrap_val_out("$"))))
+                    }
+                },
+                val::out::js::Effect::Chain => function("$1", function("$2", format!(
+                    "() => {{ {}(); {}() }}",
+                    unwrap_val_out("$1"),
+                    unwrap_val_out("$2"),
+                )))
+            },
         }
     }
 }

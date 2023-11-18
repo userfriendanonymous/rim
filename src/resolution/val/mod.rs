@@ -1,5 +1,8 @@
 use crate::syntax::{Ident, self};
-use super::{Globe, Env, globe::{TypeId, ValId}, module};
+use super::{Globe, Env, module};
+pub use out::Value as Out;
+
+pub mod out;
 
 #[derive(Clone, Debug)]
 pub enum Value {
@@ -7,19 +10,6 @@ pub enum Value {
     Out(Out)
 }
 
-#[derive(Clone, Debug)]
-pub enum Out {
-    Ref(ValId),
-    Call(Box<Out>, Box<Out>),
-    LetIn(module::Where, Box<Out>),
-    Function(ValId, Box<Out>),
-    SumInit(usize, TypeId),
-    ProductInit(TypeId),
-    SumMatch(TypeId),
-    ProductField(usize, TypeId),
-    String(String),
-    Number(syntax::Number)
-}
 
 #[derive(Clone, Debug)]
 pub enum Error<'a> {

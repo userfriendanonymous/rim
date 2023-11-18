@@ -40,11 +40,16 @@ in let
             right = right
             isleft = isleft
             isright v = bool.not (isleft v)
+in let
+    val used = builtin.js.effect.console.log "
+        This text will be printed because the effect is connected to the main function!
+        "
 in
-    val idk = either.isleft (either.left ((\f = f f) (\f = f f)))
-    val main =
-        val cool = 10
-        in cool
+    val main = builtin.js.effect.chain
+        (builtin.js.effect.chain
+            (builtin.js.effect.console.log "hello!!")
+            (builtin.js.effect.console.log "lol, those effects are chained!"))
+            used
 "#;
 
 const CODE_: &str =

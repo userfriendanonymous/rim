@@ -2,7 +2,7 @@ use crate::resolution::{Env, Globe, val, Id, Module, module};
 
 pub fn value(env: &Env, globe: &Globe) -> String {
     let main = format!(
-        "console.log({})",
+        "{}()",
         id(&env.main_val().unwrap().unwrap())
     );
 
@@ -54,15 +54,15 @@ pub fn id(value: &Id) -> String {
 
 pub fn val_out(value: &val::Out, globe: &Globe) -> String {
     match value {
-        val::Out::Call(f, input) => format!("({})({})", val_out(&f, globe), val_out(&input, globe)),
-        val::Out::Function(input, output) => format!("{} => {}", id(&input.unwrap()), val_out(&output, globe)),
+        val::Out::Call(f, input) => format!("{}({})", val_out(&f, globe), val_out(&input, globe)),
+        val::Out::Function(input, output) => format!("({} => {})", id(&input.unwrap()), val_out(&output, globe)),
         val::Out::Ref(value) => id(&value.unwrap()),
         val::Out::LetIn(input, output) => format!("
             (() => {{ {}; return {} }})()",
             self::module(input, globe),
             val_out(output, globe)
         ),
-        val::Out::SumInit(field_id, _) => {
+        val::Out::Sum(field_id, _) => {
             format!("$ => [{}, $]", field_id)
         },
         val::Out::SumMatch(type_id) => {
@@ -72,20 +72,20 @@ pub fn val_out(value: &val::Out, globe: &Globe) -> String {
                 "if ($sum[0] == {id}) {{ return ${id}($sum[1]) }} else "
             )).collect::<String>();
             format!(
-                "{inputs}$sum => {{ {branches}{{ throw new Error('Sum type mismatch: $sum[0] is not in range of possible branches!') }} }}"
+                "({inputs}$sum => {{ {branches}{{ throw new Error('Sum type mismatch: $sum[0] is not in range of possible branches!') }} }})"
             )
         },
         val::Out::ProductField(field_id, _) => format!(
-            "$value => $value[{field_id}]"
+            "($value => $value[{field_id}])"
         ),
-        val::Out::ProductInit(type_id) => {
+        val::Out::Product(type_id) => {
             let len = globe.product_type(type_id);
             let inputs = (0..*len).map(|id| format!("${id} => ")).collect::<String>();
             let fields = (0..*len).map(|id| format!(
                 "${id}, "
             )).collect::<String>();
             format!(
-                "{inputs} [{fields}]"
+                "({inputs} [{fields}])"
             )
         },
         val::Out::String(v) => {
@@ -93,19 +93,27 @@ pub fn val_out(value: &val::Out, globe: &Globe) -> String {
                 .map(|ch| {
                     if ch == '\\' {
                         "\\\\".into()
-                    } else if ch == '"' {
-                        "\\\"".into()
+                    } else if ch == '`' {
+                        "\\`".into()
                     } else {
                         ch.to_string()
                     }
                 })
                 .collect::<String>();
-            format!(r#""{content}""#)
+            format!(r#"`{content}`"#)
         },
         val::Out::Number(v) => {
             let items = v.items.iter().map(|item| item.to_str()).collect::<String>();
             let last = v.last.to_str();
             format!("{items}{last}")
+        },
+        val::Out::Js(v) => match v {
+            val::out::Js::Effect(v) => match v {
+                val::out::js::Effect::Console(v) => match v {
+                    val::out::js::effect::Console::Log => format!("($ => () => console.log($))")
+                },
+                val::out::js::Effect::Chain => format!("($1 => $2 => () => {{ $1(); $2() }})")
+            }
         }
     }
 }
