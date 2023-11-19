@@ -1,24 +1,24 @@
-use std::collections::BTreeMap;
 use super::super::Globe;
 use crate::resolution::globe::{ValId, ModuleId, Store};
-use crate::syntax::{Ident, Path, ident};
-use super::LetIn;
+use crate::syntax::{Ident, Path};
 pub use builder::Value as Builder;
+pub use public::{Value as Public, MergeCollision};
+pub use structure::Value as Structure;
 
+mod public;
+mod structure;
 mod builder;
 
-#[derive(Clone, Debug)]
-pub enum TryAppendError {
-    Val(ValId),
-    Module(ModuleId),
+#[derive(Clone, Debug, Default)]
+pub struct LetIn {
+    pub input: Value,
+    pub output: Value,
 }
-
 
 #[derive(Clone, Debug, Default)]
 pub struct Value {
-    let_ins: Vec<LetIn>,
-    modules: BTreeMap<Ident, ModuleId>,
-    vals: BTreeMap<Ident, ValId>
+    structure: Structure,
+    public: Public,
 }
 
 impl Value {
@@ -26,41 +26,66 @@ impl Value {
         Builder::new(store)
     }
 
-    pub fn with_val(mut self, name: Ident, id: ValId) -> Self {
-        self.add_val(name, id);
+    pub fn structure(&self) -> &Structure {
+        &self.structure
+    }
+
+    pub fn module_id(&self, name: &Ident) -> Option<&ModuleId> {
+        self.public.module_id(name)
+    }
+
+    pub fn val_id(&self, name: &Ident) -> Option<&ValId> {
+        self.public.val_id(name)
+    }
+
+    pub fn merge_let_in(&mut self, value: LetIn) -> Result<(), MergeCollision> {
+        self.public.merge(value.output.public.clone())?;
+        self.structure.add_let_in(value.into());
+        Ok(())
+    }
+
+    pub fn merge(&mut self, other: Self) -> Result<(), MergeCollision> {
+        self.public.merge(other.public)?;
+        self.structure.shadow(other.structure);
+        Ok(())
+    }
+
+    pub fn merge_val(&mut self, name: Ident, id: ValId) -> Result<(), &ValId> {
+        self.public.merge_val(name, id)?;
+        self.structure.shadow_val(name, id);
+        Ok(())
+    }
+
+    pub fn merge_module(&mut self, name: Ident, id: ModuleId) -> Result<(), &ModuleId> {
+        self.public.merge_module(name, id)?;
+        self.structure.shadow_module(name, id);
+        Ok(())
+    }
+
+    pub fn shadow(&mut self, mut other: Self) {
+        self.public.shadow(other.public);
+        self.structure.shadow(other.structure);
+    }
+
+    pub fn shadowed(mut self, other: Self) -> Self {
+        self.shadow(other);
         self
     }
 
-    pub fn with_module(mut self, name: Ident, id: ModuleId) -> Self {
-        self.add_module(name, id);
-        self
+    pub fn shadow_val(&mut self, name: Ident, id: ValId) {
+        self.public.shadow_val(name, id);
+        self.structure.shadow_val(name, id);
     }
 
-    pub fn with_let_in(mut self, value: LetIn) -> Self {
-        self.add_let_in(value);
-        self
-    }
-
-    pub fn main_val(&self) -> Option<&ValId> {
-        self.val(&ident::main())
-    }
-
-    pub fn modules(&self) -> &BTreeMap<Ident, ModuleId> {
-        &self.modules
-    }
-
-    pub fn vals(&self) -> &BTreeMap<Ident, ValId> {
-        &self.vals
-    }
-
-    pub fn let_ins(&self) -> &Vec<LetIn> {
-        &self.let_ins
+    pub fn shadow_module(&mut self, name: Ident, id: ModuleId) {
+        self.public.shadow_module(name, id);
+        self.structure.shadow_module(name, id);
     }
 
     pub fn to_path<'a>(&'a self, path_items: &[Ident], globe: &'a Globe) -> Result<&'a Value, usize> {
         let mut module = self;
         for (id, name) in path_items.into_iter().enumerate() {
-            let mut value = globe.module(module.module(name).ok_or(id)?);
+            let mut value = globe.module(module.public.module_id(name).ok_or(id)?);
             module = loop {
                 match value {
                     super::Value::Ref(id) => value = globe.module(id),
@@ -73,66 +98,11 @@ impl Value {
 
     pub fn module_id_by_path<'a>(&'a self, path: &Path, globe: &'a Globe) -> Result<&'a ModuleId, Option<usize>> {
         let module = self.to_path(&path.items, globe).map_err(Some)?;
-        module.modules.get(&path.name).ok_or(None)
+        module.module_id(&path.name).ok_or(None)
     }
 
-    pub fn value_id_by_path<'a>(&'a self, path: &Path, globe: &'a Globe) -> Result<&'a ValId, Option<usize>> {
+    pub fn val_id_by_path<'a>(&'a self, path: &Path, globe: &'a Globe) -> Result<&'a ValId, Option<usize>> {
         let module = self.to_path(&path.items, globe).map_err(Some)?;
-        module.vals.get(&path.name).ok_or(None)
-    }
-
-    pub fn module(&self, name: &Ident) -> Option<&ModuleId> {
-        self.modules.get(name)
-    }
-
-    pub fn val(&self, name: &Ident) -> Option<&ValId> {
-        self.vals.get(name)
-    }
-
-    pub fn append(mut self, mut other: Self) -> Self {
-        self.modules.append(&mut other.modules);
-        self.vals.append(&mut other.vals);
-        self
-    }
-
-    pub fn add_val(&mut self, name: Ident, id: ValId) {
-        self.vals.insert(name, id);
-    }
-
-    pub fn add_module(&mut self, name: Ident, id: ModuleId) {
-        self.modules.insert(name, id);
-    }
-
-    pub fn add_let_in(&mut self, value: LetIn) {
-        self.let_ins.push(value);
-    }
-
-    pub fn try_add_val(&mut self, name: Ident, id: ValId) -> Result<(), ValId> {
-        if let Some(id) = self.vals.get(&name) {
-            Err(*id)
-        } else {
-            self.vals.insert(name, id);
-            Ok(())
-        }
-    }
-
-    pub fn try_add_module(&mut self, name: Ident, id: ModuleId) -> Result<(), ModuleId> {
-        if let Some(id) = self.modules.get(&name) {
-            Err(*id)
-        } else {
-            self.modules.insert(name, id);
-            Ok(())
-        }
-    }
-
-    pub fn try_append(&mut self, other: Self) -> Result<(), TryAppendError> {
-        type E = TryAppendError;
-        for (name, id) in other.vals {
-            self.try_add_val(name, id).map_err(E::Val)?;
-        }
-        for (name, id) in other.modules {
-            self.try_add_module(name, id).map_err(E::Module)?;
-        }
-        Ok(())
+        module.val_id(&path.name).ok_or(None)
     }
 }

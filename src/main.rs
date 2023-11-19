@@ -1,11 +1,13 @@
-use std::{fs::File, io::Write};
+use std::{fs::File, io::Write, collections::BTreeMap};
 use ariadne::{Label, Source};
 use chumsky::Parser;
+use depending::Dependency;
 
 mod parsing;
 mod syntax;
 mod target;
 mod resolution;
+mod depending;
 
 const CODE: &str =
 r#"
@@ -74,7 +76,10 @@ fn main() {
         Ok(syntax) => {
             write_string_to_file("syntax.js", &format!("{:#?}", &syntax));
 
-            let (env, globe) = resolution::value(&syntax).unwrap();
+            let mut deps = BTreeMap::new();
+            deps.insert("builtin".into(), Dependency::BuiltIn);
+
+            let (env, globe) = depending::resolve(&syntax, deps).unwrap();
 
             write_string_to_file("lazy-output.js", &target::js::lazy::value(&env, &globe));
             write_string_to_file("strict-output.js", &target::js::strict::value(&env, &globe));

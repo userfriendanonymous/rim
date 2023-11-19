@@ -27,12 +27,12 @@ impl<'a> Value<'a> {
     }
 
     pub fn with_val<N: Into<Ident>>(mut self, name: N, value: val::Out) -> Self {
-        self.inner.add_val(name.into(), self.store.new_val(Val::Out(value)));
+        self.inner.shadow_val(name.into(), self.store.new_val(Val::Out(value)));
         self
     }
 
     pub fn with_module<N: Into<Ident>, V: Into<super::Value>>(mut self, name: N, value: V) -> Self {
-        self.inner.add_module(name.into(), self.store.new_module(Module::Where(value.into())));
+        self.inner.shadow_module(name.into(), self.store.new_module(Module::Where(value.into())));
         self
     }
 

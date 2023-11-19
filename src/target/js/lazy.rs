@@ -121,12 +121,11 @@ pub fn val_out(value: &val::Out, globe: &Globe) -> String {
         val::Out::String(v) => {
             let content = v.chars()
                 .map(|ch| {
-                    if ch == '\\' {
-                        "\\\\".into()
-                    } else if ch == '`' {
-                        "\\`".into()
-                    } else {
-                        ch.to_string()
+                    match ch {
+                        '\\' => "\\\\".into(),
+                        '"' => "\\\"".into(),
+                        '\n' => "\\n".into(),
+                        _ => ch.to_string()
                     }
                 })
                 .collect::<String>();

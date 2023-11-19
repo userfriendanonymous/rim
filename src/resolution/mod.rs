@@ -7,27 +7,14 @@ pub use module::Where as Env;
 
 use crate::syntax;
 
-use self::module::LetIn;
-
 pub mod val;
 pub mod module;
 pub mod globe;
 pub mod id;
 pub mod r#type;
+pub mod built_in_module;
 // pub mod type_check;
 
-pub fn value<'a>(input: &'a [syntax::module::Item]) -> Result<(Env, Globe), module::Error<'a>> {
-    let mut globe = Globe::new();
-    let builtin_env = module::Where::default()
-        .with_module("builtin".into(), globe.built_ins().builtin_module_id);
-    let main_module = module::r#where(input, builtin_env.clone(), &mut globe)?;
-
-    let env = module::Where::default()
-        .with_let_in(LetIn {
-            input: builtin_env,
-            output: main_module.let_ins().clone(),
-        })
-        .append(main_module);
-
-    Ok((env, globe))
+pub fn value<'a>(syntax: &'a syntax::Value, env: Env, globe: &mut Globe) -> Result<Env, module::Error<'a>> {
+    module::r#where(syntax, env, globe)
 }

@@ -22,7 +22,7 @@ pub fn out<'a>(input: &'a syntax::Val, env: Env, globe: &mut Globe) -> Result<Ou
 
     Ok(match input {
         syntax::Val::Ref(path) => {
-            Out::Ref(*env.value_id_by_path(path, &globe).map_err(|e| E::PathNotFound(&path.items, e))?)
+            Out::Ref(*env.val_id_by_path(path, &globe).map_err(|e| E::PathNotFound(&path.items, e))?)
         }
         syntax::Val::Call(f, input) => {
             let f = out(f.as_ref(), env.clone(), globe)?;
@@ -31,12 +31,14 @@ pub fn out<'a>(input: &'a syntax::Val, env: Env, globe: &mut Globe) -> Result<Ou
         },
         syntax::Val::Function(f) => {
             let id = globe.new_val(Value::In);
-            let out = out(&f.output, env.clone().with_val(f.input.clone(), id), globe)?;
+            let mut env = env.clone();
+            env.shadow_val(f.input.clone(), id);
+            let out = out(&f.output, env, globe)?;
             Out::Function(id, Box::new(out))
         },
         syntax::Val::LetIn(input, output) => {
             let input = module::r#where(input, env.clone(), globe).map_err(|e| E::LetInInput(Box::new(e)))?;
-            Out::LetIn(input.clone(), Box::new(out(output.as_ref(), env.clone().append(input), globe)?))
+            Out::LetIn(input.clone(), Box::new(out(output.as_ref(), env.clone().shadowed(input), globe)?))
         },
         syntax::Val::String(v) => {
             Out::String(v.clone())

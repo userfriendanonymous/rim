@@ -10,3 +10,5 @@ pub mod function;
 pub mod path;
 pub mod module;
 pub mod number;
+
+pub type Value = Vec<module::Item>;

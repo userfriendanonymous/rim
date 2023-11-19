@@ -1,19 +1,13 @@
 use super::{Val, Globe, val, Type, globe::{ModuleId, ValId}};
-use crate::syntax::{self, Ident, Path};
-pub use r#where::{Value as Where, TryAppendError};
+use crate::{syntax::{self, Ident, Path}, resolution::module::r#where::LetIn};
+pub use r#where::{Value as Where, MergeCollision};
 
-mod r#where;
+pub mod r#where;
 
 #[derive(Clone, Debug)]
 pub enum Value {
     Where(Where),
     Ref(ModuleId),
-}
-
-#[derive(Clone, Debug, Default)]
-pub struct LetIn {
-    pub input: Where,
-    pub output: Vec<LetIn>,
 }
 
 #[derive(Clone, Debug)]
@@ -22,7 +16,7 @@ pub enum Error<'a> {
     ModuleNotFound(&'a Path, Option<usize>),
     ValNameTaken(&'a Ident, ValId),
     ModuleNameTaken(&'a Ident, ModuleId),
-    LetInNameTaken(TryAppendError)
+    LetInNameTaken(MergeCollision)
 }
 
 pub fn r#where<'a>(input: &'a [syntax::module::Item], env: Where, globe: &mut Globe) -> Result<Where, Error<'a>> {
@@ -35,7 +29,7 @@ pub fn r#where<'a>(input: &'a [syntax::module::Item], env: Where, globe: &mut Gl
             syntax::module::Item::Val(name, val) => {
                 let val = val::out(val, env.clone(), globe).map_err(E::Val)?;
                 let id = globe.new_val(Val::Out(val));
-                value.try_add_val(name.clone(), id).map_err(|id| E::ValNameTaken(name, id))?;
+                value.merge_val(name.clone(), id).map_err(|id| E::ValNameTaken(name, *id))?;
             }
 
             syntax::module::Item::Module(name, module) => {
@@ -50,26 +44,28 @@ pub fn r#where<'a>(input: &'a [syntax::module::Item], env: Where, globe: &mut Gl
                     },
                     _ => todo!()
                 };
-                value.try_add_module(name.clone(), id).map_err(|id| E::ModuleNameTaken(name, id))?;
+                value.merge_module(name.clone(), id).map_err(|id| E::ModuleNameTaken(name, *id))?;
             },
 
             syntax::module::Item::LetIn(input, output) => {
                 let input = self::r#where(input, env.clone(), globe)?;
-                let new_env = env.clone().append(input.clone());
+                let new_env = env.clone().shadowed(input.clone());
                 let output = self::r#where(output, new_env, globe)?;
-                value.add_let_in(LetIn { input, output: output.let_ins().clone() });
-                value.try_append(output).map_err(E::LetInNameTaken)?;
+                value.merge_let_in(LetIn {
+                    input,
+                    output
+                }).map_err(E::LetInNameTaken)?;
             },
 
             syntax::module::Item::Sum(name, fields) => {
                 let id = globe.new_type(Type::Sum(fields.len()));
                 {
                     let id = globe.new_val(Val::Out(val::Out::SumMatch(id)));
-                    value.try_add_val(name.clone(), id).map_err(|id| E::ValNameTaken(name, id))?;
+                    value.merge_val(name.clone(), id).map_err(|&id| E::ValNameTaken(name, id))?;
                 }
                 for (idx, field) in fields.into_iter().enumerate() {
                     let field_id = globe.new_val(Val::Out(val::Out::Sum(idx, id)));
-                    value.try_add_val(field.clone(), field_id).map_err(|id| E::ValNameTaken(field, id))?;
+                    value.merge_val(field.clone(), field_id).map_err(|&id| E::ValNameTaken(field, id))?;
                 }
             }
 
@@ -77,11 +73,11 @@ pub fn r#where<'a>(input: &'a [syntax::module::Item], env: Where, globe: &mut Gl
                 let id = globe.new_type(Type::Product(fields.len()));
                 {
                     let id = globe.new_val(Val::Out(val::Out::Product(id)));
-                    value.try_add_val(name.clone(), id).map_err(|id| E::ValNameTaken(name, id))?;
+                    value.merge_val(name.clone(), id).map_err(|&id| E::ValNameTaken(name, id))?;
                 }
                 for (idx, field) in fields.into_iter().enumerate() {
                     let field_id = globe.new_val(Val::Out(val::Out::ProductField(idx, id)));
-                    value.try_add_val(field.clone(), field_id).map_err(|id| E::ValNameTaken(field, id))?;
+                    value.merge_val(field.clone(), field_id).map_err(|&id| E::ValNameTaken(field, id))?;
                 }
             },
 
@@ -93,4 +89,3 @@ pub fn r#where<'a>(input: &'a [syntax::module::Item], env: Where, globe: &mut Gl
 
     Ok(value)
 }
-
