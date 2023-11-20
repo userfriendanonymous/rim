@@ -1,9 +1,11 @@
 use chumsky::{Parser, text::keyword, prelude::Simple, primitive::{just, empty}};
-use crate::syntax::{val::Value, Number, Path};
+use crate::syntax::{val::{Value, Infix}, Number, Path};
 use super::{space, space::IndentBound, path, module, function};
+use infix::value as infix;
 
 mod string;
 mod number;
+mod infix;
 
 #[derive(Clone, Debug)]
 pub enum Level1 {
@@ -44,8 +46,8 @@ pub fn value(ind: IndentBound) -> impl Parser<char, Value, Error = Simple<char>>
             .or(just("val").to(Level1::Val).map(Ok))
             .or(just("\\").to(Level1::Lambda).map(Ok))
             .or(number::value().map(Level1::Number).map(Ok))
-            .or(string::value(ind).map(Level1::String).map(Ok))
-            .or(path::value(ind).map(Level1::Path).map(Ok))
+            .or(string::value(ind).boxed().map(Level1::String).map(Ok))
+            .or(path::value().boxed().map(Level1::Path).map(Ok))
             .try_map(|result, _| result)
             .then_with(move |branch| {
                 match branch {
@@ -61,35 +63,7 @@ pub fn value(ind: IndentBound) -> impl Parser<char, Value, Error = Simple<char>>
                 }
             });
 
-        // just('(')
-        //     .ignored()
-        //     .then_with(move |_| self::value(ind).boxed())
-        //     .then_ignore(space(ind, 0))
-        //     .then_ignore(just(')'))
-        //     .or(
-        //         keyword("let")
-        //             .ignore_then()
-        //     )
-        //     .or(
-        //         keyword("val")
-        //             .ignore_then(val_in(ind).boxed())
-            // )
-            // .or(
-            //     number::value().map(Value::Number)
-            // )
-            // .or(
-            //     path::value(ind).map(Value::Ref).boxed()
-            // )
-            // .or(
-            //     just('\\')
-            //         .ignored()
-            //         .then_with(move |_| function::value(ind).boxed())
-            // )
-            // .or(
-            //     string::value(ind).map(Value::String)
-            // );
-            
-    let call = move |ind| level1(ind)
+    let apply = move |ind| level1(ind)
         .then(
             space(ind)
                 .then_with(move |ind| {
@@ -114,7 +88,7 @@ pub fn value(ind: IndentBound) -> impl Parser<char, Value, Error = Simple<char>>
                 })
                 .repeated()
         )
-        .foldl(|f, input| Value::Call(Box::new(f), Box::new(input)));
+        .foldl(|f, input| Value::Apply(Box::new(f), Box::new(input)));
         // .foldl(|f: Result<_, _>, input: Result<_, _>| match (f, input) {
         //     (Ok(f), Ok(input)) => Ok(Value::Call(Box::new(f), Box::new(input))),
         //     (Err(f_error), Err(input_error)) => Err(f_error.merge(input_error)),
@@ -122,6 +96,18 @@ pub fn value(ind: IndentBound) -> impl Parser<char, Value, Error = Simple<char>>
         //     (_, Err(input_error)) => Err(input_error)
         // })
         // .try_map(move |result, _| result);
-
-    call(ind)
+    
+    infix(
+        ind,
+        |_| just('<').to(Infix::ApplyLeft).or(just('>').to(Infix::ApplyRight)),
+        move |ind| infix(
+            ind,
+            |_| just('+').to(Infix::Add).or(just('-').to(Infix::Sub)),
+            move |ind| infix(
+                ind,
+                |_| just('*').to(Infix::Mul).or(just('/').to(Infix::Div)),
+                apply
+            ).boxed()
+        ).boxed()
+    ).boxed()
 }

@@ -24,10 +24,10 @@ pub fn out<'a>(input: &'a syntax::Val, env: Env, globe: &mut Globe) -> Result<Ou
         syntax::Val::Ref(path) => {
             Out::Ref(*env.val_id_by_path(path, &globe).map_err(|e| E::PathNotFound(&path.items, e))?)
         }
-        syntax::Val::Call(f, input) => {
+        syntax::Val::Apply(f, input) => {
             let f = out(f.as_ref(), env.clone(), globe)?;
             let input = out(input.as_ref(), env.clone(), globe)?;
-            Out::Call(Box::new(f), Box::new(input))
+            Out::Apply(Box::new(f), Box::new(input))
         },
         syntax::Val::Function(f) => {
             let id = globe.new_val(Value::In);
@@ -41,11 +41,44 @@ pub fn out<'a>(input: &'a syntax::Val, env: Env, globe: &mut Globe) -> Result<Ou
             Out::LetIn(input.clone(), Box::new(out(output.as_ref(), env.clone().shadowed(input), globe)?))
         },
         syntax::Val::String(v) => {
-            Out::String(v.clone())
+            Out::String(out::String::Value(v.clone()))
         },
         syntax::Val::Number(v) => {
-            Out::Number(v.clone())
+            Out::Number(out::Number::Value(v.clone()))
+        },
+        syntax::Val::Infix(op) => match op {
+            syntax::val::Infix::Add => Out::Number(out::Number::Add),
+            syntax::val::Infix::Sub => Out::Number(out::Number::Sub),
+            syntax::val::Infix::Mul => Out::Number(out::Number::Mul),
+            syntax::val::Infix::Div => Out::Number(out::Number::Div),
+            syntax::val::Infix::ApplyLeft => {
+                let input_id = globe.new_val(Value::In);
+                Out::Function(input_id, Box::new({
+                    let f_id = globe.new_val(Value::In);
+                    Out::Function(f_id, Box::new(Out::Apply(Box::new(Out::Ref(f_id)), Box::new(Out::Ref(input_id)))))
+                }))
+            },
+            syntax::val::Infix::ApplyRight => {
+                let f_id = globe.new_val(Value::In);
+                Out::Function(f_id, Box::new({
+                    let input_id = globe.new_val(Value::In);
+                    Out::Function(input_id, Box::new(Out::Apply(Box::new(Out::Ref(f_id)), Box::new(Out::Ref(input_id)))))
+                }))
+            },
+        },
+        syntax::Val::InfixApply(f, left, right) => {
+            let f = out(f, env.clone(), globe)?;
+            let left = left.as_ref().map(|v| out(&v, env.clone(), globe)).transpose()?;
+            let right = right.as_ref().map(|v| out(&v, env.clone(), globe)).transpose()?;
+            match (left, right) {
+                (Some(left), Some(right)) => Out::Apply(Box::new(Out::Apply(Box::new(f), Box::new(left))), Box::new(right)),
+                (Some(left), None) => Out::Apply(Box::new(f), Box::new(left)),
+                (None, Some(right)) => {
+                    let left_id = globe.new_val(Value::In);
+                    Out::Function(left_id, Box::new(Out::Apply(Box::new(Out::Apply(Box::new(f), Box::new(Out::Ref(left_id)))), Box::new(right))))
+                },
+                (None, None) => f
+            }
         }
     })
 }
-

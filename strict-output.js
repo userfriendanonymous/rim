@@ -1,32 +1,38 @@
-let v1 = ($ => () => console.log($))
-let v0 = ($1 => $2 => () => { $1(); $2() })
-let v3 = ($0 => $1 =>  [$0, $1, ])
-let v4 = ($value => $value[0])
-let v5 = ($value => $value[1])
-let v2 = ( [])
-let v8 = $ => [1, $]
-let v7 = $ => [0, $]
-let v6 = ($0 => $1 => $sum => { if ($sum[0] == 0) { return $0($sum[1]) } else if ($sum[0] == 1) { return $1($sum[1]) } else { throw new Error('Sum type mismatch: $sum[0] is not in range of possible branches!') } })
-let v14 = v8(v2)
-let v15 = v7(v2)
-let v13 = (v9 => (v10 => v6((v11 => v9))((v12 => v10))))
-let v17 = v14
-let v18 = v15
-let v19 = v13(v14)(v15)
-let v16 = v13
-let v22 = $ => [1, $]
-let v21 = $ => [0, $]
-let v20 = ($0 => $1 => $sum => { if ($sum[0] == 0) { return $0($sum[1]) } else if ($sum[0] == 1) { return $1($sum[1]) } else { throw new Error('Sum type mismatch: $sum[0] is not in range of possible branches!') } })
-let v25 = v20((v23 => v17))((v24 => v18))
-let v28 = v22
-let v31 = (v30 => v19(v25(v30)))
-let v29 = v25
-let v27 = v21
-let v26 = v20
-let v32 = v1(`
-This text will be printed because the effect is connected to the main function!
-`)
-let v33 = v0(v0(v1(`hello!!`))(v1(`lol, those effects are chained!`)))(v32)
+let v0 = ($l => $r => $l + $r)
+let v2 = ($l => $r => $l * $r)
+let v3 = ($l => $r => $l / $r)
+let v1 = ($l => $r => $l - $r)
+let v5 = ($ => () => console.log($))
+let v4 = ($1 => $2 => () => { $1(); $2() })
+let v11 = ($0 => $1 =>  [$0, $1, ])
+let v12 = ($value => $value[0])
+let v13 = ($value => $value[1])
+let v10 = ( [])
+let v6 = v0
+let v8 = v2
+let v9 = v3
+let v7 = v1
+let v16 = $ => [1, $]
+let v15 = $ => [0, $]
+let v14 = ($0 => $1 => $sum => { if ($sum[0] == 0) { return $0($sum[1]) } else if ($sum[0] == 1) { return $1($sum[1]) } else { throw new Error('Sum type mismatch: $sum[0] is not in range of possible branches!') } })
+let v22 = v16(v10)
+let v23 = v15(v10)
+let v21 = (v17 => (v18 => v14((v19 => v17))((v20 => v18))))
+let v25 = v22
+let v26 = v23
+let v27 = v21(v22)(v23)
+let v24 = v21
+let v30 = $ => [1, $]
+let v29 = $ => [0, $]
+let v28 = ($0 => $1 => $sum => { if ($sum[0] == 0) { return $0($sum[1]) } else if ($sum[0] == 1) { return $1($sum[1]) } else { throw new Error('Sum type mismatch: $sum[0] is not in range of possible branches!') } })
+let v33 = v28((v31 => v25))((v32 => v26))
+let v36 = v30
+let v39 = (v38 => v27(v33(v38)))
+let v37 = v33
+let v35 = v29
+let v34 = v28
+let v42 = (v40 => (v41 => v40(v41)))(v5)(($l => $r => $l + $r)(10)(20))
+let v43 = v4(v4(v5("hello!!"))(v5("lol, those effects are chained!")))(v42)
 
 // MAIN
-v33()
+v43()

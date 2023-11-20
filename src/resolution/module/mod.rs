@@ -29,7 +29,7 @@ pub fn r#where<'a>(input: &'a [syntax::module::Item], env: Where, globe: &mut Gl
             syntax::module::Item::Val(name, val) => {
                 let val = val::out(val, env.clone(), globe).map_err(E::Val)?;
                 let id = globe.new_val(Val::Out(val));
-                value.merge_val(name.clone(), id).map_err(|id| E::ValNameTaken(name, *id))?;
+                value.merge_val(name.clone(), id).map_err(|id| E::ValNameTaken(name, id))?;
             }
 
             syntax::module::Item::Module(name, module) => {
@@ -44,7 +44,7 @@ pub fn r#where<'a>(input: &'a [syntax::module::Item], env: Where, globe: &mut Gl
                     },
                     _ => todo!()
                 };
-                value.merge_module(name.clone(), id).map_err(|id| E::ModuleNameTaken(name, *id))?;
+                value.merge_module(name.clone(), id).map_err(|id| E::ModuleNameTaken(name, id))?;
             },
 
             syntax::module::Item::LetIn(input, output) => {
@@ -60,24 +60,24 @@ pub fn r#where<'a>(input: &'a [syntax::module::Item], env: Where, globe: &mut Gl
             syntax::module::Item::Sum(name, fields) => {
                 let id = globe.new_type(Type::Sum(fields.len()));
                 {
-                    let id = globe.new_val(Val::Out(val::Out::SumMatch(id)));
-                    value.merge_val(name.clone(), id).map_err(|&id| E::ValNameTaken(name, id))?;
+                    let id = globe.new_val(Val::Out(val::Out::Sum(val::out::Sum::Match(id))));
+                    value.merge_val(name.clone(), id).map_err(|id| E::ValNameTaken(name, id))?;
                 }
                 for (idx, field) in fields.into_iter().enumerate() {
-                    let field_id = globe.new_val(Val::Out(val::Out::Sum(idx, id)));
-                    value.merge_val(field.clone(), field_id).map_err(|&id| E::ValNameTaken(field, id))?;
+                    let field_id = globe.new_val(Val::Out(val::Out::Sum(val::out::Sum::Init(idx, id))));
+                    value.merge_val(field.clone(), field_id).map_err(|id| E::ValNameTaken(field, id))?;
                 }
             }
 
             syntax::module::Item::Product(name, fields) => {
                 let id = globe.new_type(Type::Product(fields.len()));
                 {
-                    let id = globe.new_val(Val::Out(val::Out::Product(id)));
-                    value.merge_val(name.clone(), id).map_err(|&id| E::ValNameTaken(name, id))?;
+                    let id = globe.new_val(Val::Out(val::Out::Product(val::out::Product::Init(id))));
+                    value.merge_val(name.clone(), id).map_err(|id| E::ValNameTaken(name, id))?;
                 }
                 for (idx, field) in fields.into_iter().enumerate() {
-                    let field_id = globe.new_val(Val::Out(val::Out::ProductField(idx, id)));
-                    value.merge_val(field.clone(), field_id).map_err(|&id| E::ValNameTaken(field, id))?;
+                    let field_id = globe.new_val(Val::Out(val::Out::Product(val::out::Product::Field(idx, id))));
+                    value.merge_val(field.clone(), field_id).map_err(|id| E::ValNameTaken(field, id))?;
                 }
             },
 

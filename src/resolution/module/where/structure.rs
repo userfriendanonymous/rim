@@ -41,4 +41,16 @@ impl Value {
     pub fn add_let_in(&mut self, value: LetIn) {
         self.let_ins.push(value);
     }
+
+    pub fn vals(&self) -> &BTreeMap<Ident, ValId> {
+        &self.vals
+    }
+
+    pub fn modules(&self) -> &BTreeMap<Ident, ModuleId> {
+        &self.modules
+    }
+
+    pub fn let_ins(&self) -> &Vec<LetIn> {
+        &self.let_ins
+    }
 }

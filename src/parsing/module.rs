@@ -26,7 +26,7 @@ pub fn val(ind: IndentBound) -> impl Parser<char, Vec<Item>, Error = Simple<char
             let ind: IndentBound = ind.into();
             ident()
                 .then_ignore(space(ind + 1))
-                .then(function::value(ind + 1))
+                .then(function::value(ind + 1).boxed())
                 .map(|(name, value)| Item::Val(name, value))
         })
         .repeated()
@@ -47,7 +47,7 @@ pub fn value(ind: IndentBound) -> impl Parser<char, Vec<Item>, Error = Simple<ch
                     .then_with(move |(name, r#type)| {
                         match r#type {
                             ModuleType::Ref => space(ind + 1)
-                                .ignore_then(path(ind))
+                                .ignore_then(path())
                                 .map(Module::Ref)
                                 .boxed(),
                             ModuleType::File => space(ind + 1)

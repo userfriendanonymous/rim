@@ -27,18 +27,18 @@ impl Value {
         self.modules.insert(name, id);
     }
 
-    pub fn merge_val(&mut self, name: Ident, id: ValId) -> Result<(), &ValId> {
+    pub fn merge_val(&mut self, name: Ident, id: ValId) -> Result<(), ValId> {
         if let Some(id) = self.vals.get(&name) {
-            Err(id)
+            Err(*id)
         } else {
             self.shadow_val(name, id);
             Ok(())
         }
     }
 
-    pub fn merge_module(&mut self, name: Ident, id: ModuleId) -> Result<(), &ModuleId> {
+    pub fn merge_module(&mut self, name: Ident, id: ModuleId) -> Result<(), ModuleId> {
         if let Some(id) = self.modules.get(&name) {
-            Err(id)
+            Err(*id)
         } else {
             self.shadow_module(name, id);
             Ok(())
@@ -47,11 +47,11 @@ impl Value {
 
     pub fn merge(&mut self, other: Self) -> Result<(), MergeCollision> {
         for (name, id) in other.vals {
-            self.merge_val(name, id).map_err(|self_id| MergeCollision::Val(name, *self_id, id))?;
+            self.merge_val(name.clone(), id).map_err(|self_id| MergeCollision::Val(name, self_id, id))?;
         }
 
         for (name, id) in other.modules {
-            self.merge_module(name, id).map_err(|self_id| MergeCollision::Module(name, *self_id, id))?;
+            self.merge_module(name.clone(), id).map_err(|self_id| MergeCollision::Module(name, self_id, id))?;
         }
 
         Ok(())

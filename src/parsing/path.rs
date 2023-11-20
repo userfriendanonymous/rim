@@ -3,9 +3,8 @@ use super::{ident, space::IndentBound, space};
 use crate::syntax::path::Value;
 
 
-pub fn value(ind: IndentBound) -> impl Parser<char, Value, Error = Simple<char>> + Clone {
+pub fn value() -> impl Parser<char, Value, Error = Simple<char>> + Clone {
     ident::value()
-        .then_ignore(space(ind))
         .then_ignore(just('.'))
         .repeated()
         .then(ident::value())

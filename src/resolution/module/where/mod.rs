@@ -6,7 +6,7 @@ pub use public::{Value as Public, MergeCollision};
 pub use structure::Value as Structure;
 
 mod public;
-mod structure;
+pub mod structure;
 mod builder;
 
 #[derive(Clone, Debug, Default)]
@@ -44,25 +44,30 @@ impl Value {
         Ok(())
     }
 
+    pub fn shadow_let_in(&mut self, value: LetIn) {
+        self.public.shadow(value.output.public.clone());
+        self.structure.add_let_in(value.into());
+    }
+
     pub fn merge(&mut self, other: Self) -> Result<(), MergeCollision> {
         self.public.merge(other.public)?;
         self.structure.shadow(other.structure);
         Ok(())
     }
 
-    pub fn merge_val(&mut self, name: Ident, id: ValId) -> Result<(), &ValId> {
-        self.public.merge_val(name, id)?;
+    pub fn merge_val(&mut self, name: Ident, id: ValId) -> Result<(), ValId> {
+        self.public.merge_val(name.clone(), id)?;
         self.structure.shadow_val(name, id);
         Ok(())
     }
 
-    pub fn merge_module(&mut self, name: Ident, id: ModuleId) -> Result<(), &ModuleId> {
-        self.public.merge_module(name, id)?;
+    pub fn merge_module(&mut self, name: Ident, id: ModuleId) -> Result<(), ModuleId> {
+        self.public.merge_module(name.clone(), id)?;
         self.structure.shadow_module(name, id);
         Ok(())
     }
 
-    pub fn shadow(&mut self, mut other: Self) {
+    pub fn shadow(&mut self, other: Self) {
         self.public.shadow(other.public);
         self.structure.shadow(other.structure);
     }
@@ -73,12 +78,12 @@ impl Value {
     }
 
     pub fn shadow_val(&mut self, name: Ident, id: ValId) {
-        self.public.shadow_val(name, id);
+        self.public.shadow_val(name.clone(), id);
         self.structure.shadow_val(name, id);
     }
 
     pub fn shadow_module(&mut self, name: Ident, id: ModuleId) {
-        self.public.shadow_module(name, id);
+        self.public.shadow_module(name.clone(), id);
         self.structure.shadow_module(name, id);
     }
 

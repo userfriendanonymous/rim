@@ -3,6 +3,8 @@ use crate::resolution::globe::Store;
 use crate::resolution::{Val, val, Module};
 use crate::syntax::Ident;
 
+use super::LetIn;
+
 pub struct Value<'a> {
     store: &'a mut Store,
     inner: super::Value
@@ -34,6 +36,17 @@ impl<'a> Value<'a> {
     pub fn with_module<N: Into<Ident>, V: Into<super::Value>>(mut self, name: N, value: V) -> Self {
         self.inner.shadow_module(name.into(), self.store.new_module(Module::Where(value.into())));
         self
+    }
+
+    pub fn with_let_in(mut self, value: LetIn) -> Self {
+        self.inner.shadow_let_in(value);
+        self
+    }
+
+    pub fn nest_let_in(self, input: impl for<'v> FnOnce(Value<'v>) -> Value<'v>, output: impl for<'v> FnOnce(Value<'v>) -> Value<'v>) -> Self {
+        let input = input(Value::new(self.store)).into();
+        let output = output(Value::new(self.store)).into();
+        self.with_let_in(LetIn { input, output })
     }
 
     pub fn nest_module<N: Into<Ident>>(self, name: N, f: impl for<'v> FnOnce(Value<'v>) -> Value<'v>) -> Self {

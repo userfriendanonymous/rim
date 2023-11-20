@@ -12,6 +12,11 @@ mod depending;
 const CODE: &str =
 r#"
 let
+    val
+        add = builtin.number.add
+        sub = builtin.number.sub
+        mul = builtin.number.mul
+        div = builtin.number.div
     mod unit where
         pro new
     mod tuple where
@@ -43,9 +48,7 @@ in let
             isleft = isleft
             isright v = bool.not (isleft v)
 in let
-    val usEdCool123Wow = builtin.js.effect.console.log "
-        This text will be printed because the effect is connected to the main function!
-        "
+    val usEdCool123Wow = builtin.js.effect.console.log > (10 +) 20
 in
     val main = builtin.js.effect.chain
         (builtin.js.effect.chain
