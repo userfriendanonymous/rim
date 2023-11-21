@@ -32,8 +32,8 @@ let v39 = [() => (v38 => [() => $unwrap($unwrap(v27)([() => $unwrap($unwrap(v33)
 let v37 = [() => $unwrap(v33)]
 let v35 = [() => $unwrap(v29)]
 let v34 = [() => $unwrap(v28)]
-let v42 = [() => $unwrap($unwrap((v40 => [() => (v41 => [() => $unwrap($unwrap(v40)([() => $unwrap(v41)]))])])([() => $unwrap(v5)]))([() => $unwrap($unwrap(($l => [() => ($r => [() => $unwrap($l) + $unwrap($r)])])([() => 10]))([() => 20]))]))]
-let v43 = [() => $unwrap($unwrap($unwrap(v4)([() => $unwrap($unwrap($unwrap(v4)([() => $unwrap($unwrap(v5)([() => "hello!!"]))]))([() => $unwrap($unwrap(v5)([() => "lol, those effects are chained!"]))]))]))([() => $unwrap(v42)]))]
+let v46 = [() => $unwrap($unwrap((v40 => [() => (v41 => [() => $unwrap($unwrap(v40)([() => $unwrap(v41)]))])])([() => $unwrap(v5)]))([() => $unwrap($unwrap((v42 => [() => (v43 => [() => $unwrap($unwrap(v42)([() => $unwrap(v43)]))])])([() => $unwrap($unwrap((v44 => [() => (v45 => [() => $unwrap($unwrap(v45)([() => $unwrap(v44)]))])])([() => $unwrap($unwrap(($l => [() => ($r => [() => $unwrap($l) - $unwrap($r)])])([() => 100]))([() => 3]))]))([() => $unwrap(v6)]))]))([() => 20]))]))]
+let v47 = [() => $unwrap($unwrap($unwrap(v4)([() => $unwrap($unwrap($unwrap(v4)([() => $unwrap($unwrap(v5)([() => "hello!!"]))]))([() => $unwrap($unwrap(v5)([() => "lol, those effects are chained!"]))]))]))([() => $unwrap(v46)]))]
 
 // MAIN
-$unwrap(v43)()
+$unwrap(v47)()

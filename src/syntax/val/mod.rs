@@ -1,4 +1,7 @@
 use super::{Function, Path, module, Number};
+pub use infix::Value as Infix;
+
+pub mod infix;
 
 #[derive(Clone, Debug)]
 pub enum Value {
@@ -9,15 +12,16 @@ pub enum Value {
     Ref(Path),
     String(String),
     Number(Number),
-    Infix(Infix)
+    InfixOp(InfixOp)
 }
 
 #[derive(Clone, Debug)]
-pub enum Infix {
+pub enum InfixOp {
     Add,
     Sub,
     Mul,
     Div,
     ApplyLeft, // i < f
-    ApplyRight // f > i
+    ApplyRight, // f > i
+    Apply, // f $ i
 }

@@ -46,25 +46,32 @@ pub fn out<'a>(input: &'a syntax::Val, env: Env, globe: &mut Globe) -> Result<Ou
         syntax::Val::Number(v) => {
             Out::Number(out::Number::Value(v.clone()))
         },
-        syntax::Val::Infix(op) => match op {
-            syntax::val::Infix::Add => Out::Number(out::Number::Add),
-            syntax::val::Infix::Sub => Out::Number(out::Number::Sub),
-            syntax::val::Infix::Mul => Out::Number(out::Number::Mul),
-            syntax::val::Infix::Div => Out::Number(out::Number::Div),
-            syntax::val::Infix::ApplyLeft => {
+        syntax::Val::InfixOp(op) => match op {
+            syntax::val::InfixOp::Add => Out::Number(out::Number::Add),
+            syntax::val::InfixOp::Sub => Out::Number(out::Number::Sub),
+            syntax::val::InfixOp::Mul => Out::Number(out::Number::Mul),
+            syntax::val::InfixOp::Div => Out::Number(out::Number::Div),
+            syntax::val::InfixOp::ApplyLeft => {
                 let input_id = globe.new_val(Value::In);
                 Out::Function(input_id, Box::new({
                     let f_id = globe.new_val(Value::In);
                     Out::Function(f_id, Box::new(Out::Apply(Box::new(Out::Ref(f_id)), Box::new(Out::Ref(input_id)))))
                 }))
             },
-            syntax::val::Infix::ApplyRight => {
+            syntax::val::InfixOp::ApplyRight => {
                 let f_id = globe.new_val(Value::In);
                 Out::Function(f_id, Box::new({
                     let input_id = globe.new_val(Value::In);
                     Out::Function(input_id, Box::new(Out::Apply(Box::new(Out::Ref(f_id)), Box::new(Out::Ref(input_id)))))
                 }))
             },
+            syntax::val::InfixOp::Apply => {
+                let f_id = globe.new_val(Value::In);
+                Out::Function(f_id, Box::new({
+                    let input_id = globe.new_val(Value::In);
+                    Out::Function(input_id, Box::new(Out::Apply(Box::new(Out::Ref(f_id)), Box::new(Out::Ref(input_id)))))
+                }))
+            }
         },
         syntax::Val::InfixApply(f, left, right) => {
             let f = out(f, env.clone(), globe)?;

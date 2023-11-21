@@ -31,8 +31,8 @@ let v39 = (v38 => v27(v33(v38)))
 let v37 = v33
 let v35 = v29
 let v34 = v28
-let v42 = (v40 => (v41 => v40(v41)))(v5)(($l => $r => $l + $r)(10)(20))
-let v43 = v4(v4(v5("hello!!"))(v5("lol, those effects are chained!")))(v42)
+let v46 = (v40 => (v41 => v40(v41)))(v5)((v42 => (v43 => v42(v43)))((v44 => (v45 => v45(v44)))(($l => $r => $l - $r)(100)(3))(v6))(20))
+let v47 = v4(v4(v5("hello!!"))(v5("lol, those effects are chained!")))(v46)
 
 // MAIN
-v43()
+v47()

@@ -48,7 +48,7 @@ in let
             isleft = isleft
             isright v = bool.not (isleft v)
 in let
-    val usEdCool123Wow = builtin.js.effect.console.log > (10 +) 20
+    val usEdCool123Wow = builtin.js.effect.console.log $ (100 -) 3 <add> 20
 in
     val main = builtin.js.effect.chain
         (builtin.js.effect.chain

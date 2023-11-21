@@ -1,10 +1,12 @@
 use chumsky::{Parser, text::keyword, prelude::Simple, primitive::{just, empty}};
-use crate::syntax::{val::{Value, Infix}, Number, Path};
+use crate::syntax::{val::{Value, infix::value as infix, InfixOp}, Number, Path};
 use super::{space, space::IndentBound, path, module, function};
-use infix::value as infix;
+use infix_apply::{left as infix_apply_left, right as infix_apply_right};
+pub use infix::value as infix;
 
 mod string;
 mod number;
+mod infix_apply;
 mod infix;
 
 #[derive(Clone, Debug)]
@@ -96,18 +98,21 @@ pub fn value(ind: IndentBound) -> impl Parser<char, Value, Error = Simple<char>>
         //     (_, Err(input_error)) => Err(input_error)
         // })
         // .try_map(move |result, _| result);
-    
-    infix(
+    infix_apply_right(
         ind,
-        |_| just('<').to(Infix::ApplyLeft).or(just('>').to(Infix::ApplyRight)),
-        move |ind| infix(
+        |v| Some(if v == infix!("$") { InfixOp::Apply } else { None? }),
+        move |ind| infix_apply_left(
             ind,
-            |_| just('+').to(Infix::Add).or(just('-').to(Infix::Sub)),
-            move |ind| infix(
+            |v| Some(if v == infix!("<") { InfixOp::ApplyLeft } else if v == infix!(">") { InfixOp::ApplyRight } else { None? }),
+            move |ind| infix_apply_left(
                 ind,
-                |_| just('*').to(Infix::Mul).or(just('/').to(Infix::Div)),
-                apply
+                |v| Some(if v == infix!("+") { InfixOp::Add } else if v == infix!("-") { InfixOp::Sub } else { None? }),
+                move |ind: IndentBound| infix_apply_left(
+                    ind,
+                    |v| Some(if v == infix!("*") { InfixOp::Mul } else if v == infix!("/") { InfixOp::Div } else { None? }),
+                    apply
+                ).boxed()
             ).boxed()
         ).boxed()
-    ).boxed()
+    )
 }
