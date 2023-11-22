@@ -14,6 +14,8 @@ pub enum Value {
     Exclamation,
     Percent,
     Period,
+    Bar,
+    Ampersand
 }
 
 impl Value {
@@ -32,6 +34,8 @@ impl Value {
             '!' => Self::Exclamation,
             '.' => Self::Period,
             '%' => Self::Percent,
+            '|' => Self::Bar,
+            '&' => Self::Ampersand,
             _ => None?
         })
     }

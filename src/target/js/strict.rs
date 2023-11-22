@@ -117,6 +117,13 @@ pub fn val_out(value: &val::Out, globe: &Globe) -> String {
             val::out::Number::Sub => format!("($l => $r => $l - $r)"),
             val::out::Number::Mul => format!("($l => $r => $l * $r)"),
             val::out::Number::Div => format!("($l => $r => $l / $r)"),
+            val::out::Number::Modulo => format!("($l => $r => $l % $r"),
+        },
+        val::Out::Boolean(v) => match v {
+            val::out::Boolean::Init(v) => if *v { "true" } else { "false" }.into(),
+            val::out::Boolean::And => "($l => $r => $l && $r)".into(),
+            val::out::Boolean::Or => "($l => $r => $l || $r)".into(),
+            val::out::Boolean::Match => "($f => $t => $v => $v ? $t : $f)".into()
         },
         val::Out::Js(v) => match v {
             val::out::Js::Effect(v) => match v {

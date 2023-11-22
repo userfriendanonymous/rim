@@ -6,4 +6,5 @@ pub enum Value {
     Sub,
     Mul,
     Div,
+    Modulo,
 }

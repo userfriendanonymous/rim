@@ -47,14 +47,16 @@ in let
             right = right
             isleft = isleft
             isright v = bool.not (isleft v)
+            usEdCool123Wow = builtin.js.effect.console.log $ if (builtin.bool.false | builtin.bool.false) then 10 + 20 else 555
 in let
-    val usEdCool123Wow = builtin.js.effect.console.log $ (100 -) 3 <add> 20
+    from either val
+        coolio = usEdCool123Wow
 in
     val main = builtin.js.effect.chain
-        (builtin.js.effect.chain
-            (builtin.js.effect.console.log "hello!!")
+        ( builtin.js.effect.chain
+            (builtin.js.effect.console.log $ builtin.bool.true & (builtin.bool.false | builtin.bool.true))
             (builtin.js.effect.console.log "lol, those effects are chained!"))
-            usEdCool123Wow
+            coolio
 "#;
 
 const CODE_: &str =

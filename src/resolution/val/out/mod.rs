@@ -4,12 +4,14 @@ pub use number::Value as Number;
 pub use string::Value as String;
 pub use sum::Value as Sum;
 pub use product::Value as Product;
+pub use boolean::Value as Boolean;
 
 pub mod js;
 pub mod number;
 pub mod string;
 pub mod sum;
 pub mod product;
+pub mod boolean;
 
 #[derive(Clone, Debug)]
 pub enum Value {
@@ -21,5 +23,6 @@ pub enum Value {
     Product(Product),
     String(String),
     Number(Number),
+    Boolean(Boolean),
     Js(Js)
 }

@@ -11,6 +11,12 @@ pub fn create(globe: &mut Globe) -> module::Where {
                 .with_val("mul", Out::Number(Number::Mul))
                 .with_val("div", Out::Number(Number::Div))
         })
+        .nest_module("bool", |m| {
+            use val::out::{Boolean, boolean};
+            m
+                .with_val("true", Out::Boolean(Boolean::Init(true)))
+                .with_val("false", Out::Boolean(Boolean::Init(false)))
+        })
         .nest_module("js", |m| {
             use val::out::{js, Js};
             m.nest_module("effect", |m| {

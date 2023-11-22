@@ -16,7 +16,9 @@ pub enum Error<'a> {
     ModuleNotFound(&'a Path, Option<usize>),
     ValNameTaken(&'a Ident, ValId),
     ModuleNameTaken(&'a Ident, ModuleId),
-    LetInNameTaken(MergeCollision)
+    LetInNameTaken(MergeCollision),
+    FromPathNotFound(&'a Path, Option<usize>),
+    FromNameTaken(MergeCollision)
 }
 
 pub fn r#where<'a>(input: &'a [syntax::module::Item], env: Where, globe: &mut Globe) -> Result<Where, Error<'a>> {
@@ -57,6 +59,12 @@ pub fn r#where<'a>(input: &'a [syntax::module::Item], env: Where, globe: &mut Gl
                 }).map_err(E::LetInNameTaken)?;
             },
 
+            syntax::module::Item::From(path, items) => {
+                let id = env.module_id_by_path(path, globe).map_err(|e| E::FromPathNotFound(path, e))?;
+                let new_env = env.clone().shadowed(globe.module_where(id).clone());
+                value.merge(self::r#where(items, new_env, globe)?).map_err(E::FromNameTaken)?;
+            }
+
             syntax::module::Item::Sum(name, fields) => {
                 let id = globe.new_type(Type::Sum(fields.len()));
                 {
@@ -83,7 +91,7 @@ pub fn r#where<'a>(input: &'a [syntax::module::Item], env: Where, globe: &mut Gl
 
             syntax::module::Item::Enum(name, fields) => {
                 todo!()
-            }
+            },
         }
     }
 

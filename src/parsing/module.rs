@@ -9,7 +9,8 @@ enum ItemType {
     Val,
     Sum,
     Product,
-    Enum
+    Enum,
+    From,
 }
 
 
@@ -107,16 +108,26 @@ pub fn value(ind: IndentBound) -> impl Parser<char, Vec<Item>, Error = Simple<ch
         .then_ignore(keyword("in"))
         .then(value(ind + 1).boxed())
         .map(|(input, output)| Item::LetIn(input, output));
+
+    let from = |ind: IndentBound| space(ind + 1)
+        .then_with(|ind| {
+            let ind: IndentBound = ind.into();
+            path()
+                .then(self::value(ind + 1).boxed())
+                .map(|(path, items)| Item::From(path, items))
+        })
+        .repeated();
     
     space(ind)
         .then_with(move |ind| {
             let ind = ind.into();
-            keyword("val").to(ItemType::Val)
-                .or(keyword("let").to(ItemType::LetIn))
-                .or(keyword("mod").to(ItemType::Module))
-                .or(keyword("sum").to(ItemType::Sum))
-                .or(keyword("pro").to(ItemType::Product))
-                .or(keyword("enum").to(ItemType::Enum))
+            just("val").to(ItemType::Val)
+                .or(just("let").to(ItemType::LetIn))
+                .or(just("mod").to(ItemType::Module))
+                .or(just("sum").to(ItemType::Sum))
+                .or(just("pro").to(ItemType::Product))
+                .or(just("enum").to(ItemType::Enum))
+                .or(just("from").to(ItemType::From))
                 .then_with(move |r#type| {
                     match r#type {
                         ItemType::Val => val(ind).boxed(),
@@ -125,6 +136,7 @@ pub fn value(ind: IndentBound) -> impl Parser<char, Vec<Item>, Error = Simple<ch
                         ItemType::Sum => sum(ind).boxed(),
                         ItemType::Product => product(ind).boxed(),
                         ItemType::Enum => r#enum(ind).boxed(),
+                        ItemType::From => from(ind).boxed(),
                     }
                 })
                 .map(Ok)

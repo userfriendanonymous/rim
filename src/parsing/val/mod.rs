@@ -14,6 +14,7 @@ pub enum Level1 {
     Scope,
     Let,
     Val,
+    If,
     Lambda,
     Path(Path),
     Number(Number),
@@ -36,14 +37,25 @@ pub fn value(ind: IndentBound) -> impl Parser<char, Value, Error = Simple<char>>
     let val_in = |ind| module::val(ind + 1)
         .then_with(move |bindings| {
             space(ind)
-            .ignore_then(keyword("in"))
+            .ignore_then(just("in"))
             .ignore_then(space(ind + 1))
             .then_with(|ind| value(ind.into()).boxed())
             .map(move |value| Value::LetIn(Clone::clone(&bindings), Box::new(value)))
         });
 
+    let r#if = |ind: IndentBound| space(ind + 1)
+        .then_with(|ind| self::value(ind.into()).boxed())
+        .then_ignore(space(ind))
+        .then_ignore(just("then"))
+        .then(space(ind + 1).then_with(|ind| self::value(ind.into()).boxed()))
+        .then_ignore(space(ind))
+        .then_ignore(just("else"))
+        .then(space(ind + 1).then_with(|ind| self::value(ind.into()).boxed()))
+        .map(|((cond, then), r#else)| Value::If(Box::new(cond), Box::new(then), Box::new(r#else)));
+
     let level1 = move |ind| 
         just('(').to(Level1::Scope).map(Ok)
+            .or(just("if").to(Level1::If).map(Ok))
             .or(just("let").to(Level1::Let).map(Ok))
             .or(just("val").to(Level1::Val).map(Ok))
             .or(just("\\").to(Level1::Lambda).map(Ok))
@@ -53,24 +65,26 @@ pub fn value(ind: IndentBound) -> impl Parser<char, Value, Error = Simple<char>>
             .try_map(|result, _| result)
             .then_with(move |branch| {
                 match branch {
-                    Level1::Scope => self::value(ind)
+                    Level1::Scope => space(ind)
+                        .ignore_then(self::value(ind))
                         .then_ignore(space(ind))
                         .then_ignore(just(')')).boxed(),
                     Level1::Let => let_in(ind).boxed(),
                     Level1::Val => val_in(ind).boxed(),
+                    Level1::If => r#if(ind).boxed(),
                     Level1::Lambda => function::value(ind).boxed(),
                     Level1::Number(v) => empty().to(Value::Number(v)).boxed(),
                     Level1::String(v) => empty().to(Value::String(v)).boxed(),
                     Level1::Path(v) => empty().to(Value::Ref(v)).boxed()
                 }
-            });
+            }).boxed();
 
     let apply = move |ind| level1(ind)
         .then(
             space(ind)
                 .then_with(move |ind| {
                     let ind = ind.into();
-                    just("in").to(())
+                    just("in").or(just("then")).or(just("else")).to(())
                     .or_not()
                     .then_with(move |v| {
                         if let Some(_) = v {
@@ -90,14 +104,9 @@ pub fn value(ind: IndentBound) -> impl Parser<char, Value, Error = Simple<char>>
                 })
                 .repeated()
         )
-        .foldl(|f, input| Value::Apply(Box::new(f), Box::new(input)));
-        // .foldl(|f: Result<_, _>, input: Result<_, _>| match (f, input) {
-        //     (Ok(f), Ok(input)) => Ok(Value::Call(Box::new(f), Box::new(input))),
-        //     (Err(f_error), Err(input_error)) => Err(f_error.merge(input_error)),
-        //     (Err(f_error), _) => Err(f_error),
-        //     (_, Err(input_error)) => Err(input_error)
-        // })
-        // .try_map(move |result, _| result);
+        .foldl(|f, input| Value::Apply(Box::new(f), Box::new(input)))
+        .boxed();
+
     infix_apply_right(
         ind,
         |v| Some(if v == infix!("$") { InfixOp::Apply } else { None? }),
@@ -106,11 +115,19 @@ pub fn value(ind: IndentBound) -> impl Parser<char, Value, Error = Simple<char>>
             |v| Some(if v == infix!("<") { InfixOp::ApplyLeft } else if v == infix!(">") { InfixOp::ApplyRight } else { None? }),
             move |ind| infix_apply_left(
                 ind,
-                |v| Some(if v == infix!("+") { InfixOp::Add } else if v == infix!("-") { InfixOp::Sub } else { None? }),
-                move |ind: IndentBound| infix_apply_left(
+                |v| Some(if v == infix!("&") { InfixOp::And } else if v == infix!("|") { InfixOp::Or } else { None? }),
+                move |ind| infix_apply_left(
                     ind,
-                    |v| Some(if v == infix!("*") { InfixOp::Mul } else if v == infix!("/") { InfixOp::Div } else { None? }),
-                    apply
+                    |v| Some(if v == infix!("+") { InfixOp::Add } else if v == infix!("-") { InfixOp::Sub } else { None? }),
+                    move |ind| infix_apply_left(
+                        ind,
+                        |v| Some(if v == infix!("*") { InfixOp::Mul } else if v == infix!("/") { InfixOp::Div } else { None? }),
+                        move |ind| infix_apply_left(
+                            ind,
+                            |v| Some(if v == infix!("%") { InfixOp::Modulo } else { None? }),
+                            apply
+                        ).boxed()
+                    ).boxed()
                 ).boxed()
             ).boxed()
         ).boxed()

@@ -12,16 +12,23 @@ pub enum Value {
     Ref(Path),
     String(String),
     Number(Number),
-    InfixOp(InfixOp)
+    InfixOp(InfixOp),
+    If(Box<Value>, Box<Value>, Box<Value>),
 }
 
 #[derive(Clone, Debug)]
 pub enum InfixOp {
+    // Number
     Add,
     Sub,
     Mul,
     Div,
+    Modulo,
+    // Function
     ApplyLeft, // i < f
     ApplyRight, // f > i
     Apply, // f $ i
+    // Boolean
+    And,
+    Or,
 }

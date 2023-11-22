@@ -71,6 +71,20 @@ pub fn function<I: Display, O: Display>(input: I, output: O) -> String {
     format!("({input} => {})", wrap_val_out(output))
 }
 
+pub fn binary_function(f: impl FnOnce(String, String) -> String) -> String {
+    function("$l", function("$r", f(unwrap_val_out("$l"), unwrap_val_out("$r"))))
+}
+
+pub fn nested_function(inputs: usize, body: impl FnOnce(std::vec::IntoIter<String>) -> String) -> String {
+    let iter = (0..inputs).map(|idx| unwrap_val_out(format!("${idx}"))).collect::<Vec<_>>().into_iter();
+    (0..inputs).fold(body(iter), |output, input_idx| function(format!("${input_idx}"), output))
+}
+
+pub fn nested_function_const<const INPUTS: usize>(body: impl FnOnce([String; INPUTS]) -> String) -> String {
+    let body = body(std::array::from_fn(|idx| unwrap_val_out(format!("${idx}"))));
+    (0..INPUTS).rev().fold(body, |output, input_idx| function(format!("${input_idx}"), output))
+}
+
 pub fn val_out(value: &val::Out, globe: &Globe) -> String {
     match value {
         val::Out::Apply(f, input) => unwrap_val_out(format!("{}({})", val_out(f, globe), wrap_val_out(val_out(&input, globe)))),
@@ -141,27 +155,18 @@ pub fn val_out(value: &val::Out, globe: &Globe) -> String {
                 let last = v.last.to_str();
                 format!("{items}{last}")
             },
-            val::out::Number::Add => function("$l", function("$r", format!(
-                "{} + {}",
-                unwrap_val_out("$l"),
-                unwrap_val_out("$r"),
-            ))),
-            val::out::Number::Sub => function("$l", function("$r", format!(
-                "{} - {}",
-                unwrap_val_out("$l"),
-                unwrap_val_out("$r"),
-            ))),
-            val::out::Number::Mul => function("$l", function("$r", format!(
-                "{} * {}",
-                unwrap_val_out("$l"),
-                unwrap_val_out("$r"),
-            ))),
-            val::out::Number::Div => function("$l", function("$r", format!(
-                "{} / {}",
-                unwrap_val_out("$l"),
-                unwrap_val_out("$r"),
-            ))),
+            val::out::Number::Add => binary_function(|l, r| format!("{l} + {r}")),
+            val::out::Number::Sub => binary_function(|l, r| format!("{l} - {r}")),
+            val::out::Number::Mul => binary_function(|l, r| format!("{l} * {r}")),
+            val::out::Number::Div => binary_function(|l, r| format!("{l} / {r}")),
+            val::out::Number::Modulo => binary_function(|l, r| format!("{l} % {r}")),
         },
+        val::Out::Boolean(v) => match v {
+            val::out::Boolean::Init(v) => if *v { format!("true") } else { format!("false") },
+            val::out::Boolean::And => binary_function(|l, r| format!("{l} && {r}")),
+            val::out::Boolean::Or => binary_function(|l, r| format!("{l} || {r}")),
+            val::out::Boolean::Match => nested_function_const(|[f, t, v]| format!("{v} ? {t} : {f}"))
+        }
         val::Out::Js(v) => match v {
             val::out::Js::Effect(v) => match v {
                 val::out::js::Effect::Console(v) => match v {
