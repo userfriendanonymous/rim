@@ -22,7 +22,7 @@ pub enum Value {
     Sum(sum::Value),
     Product(Product),
     String(String),
-    Number(Number),
     Boolean(Boolean),
+    Number(Number),
     Js(Js)
 }

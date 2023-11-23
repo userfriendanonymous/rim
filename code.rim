@@ -1,0 +1,52 @@
+let
+    val
+        add = builtin.number.add
+        sub = builtin.number.sub
+        mul = builtin.number.mul
+        div = builtin.number.div
+    mod unit where
+        pro new
+    mod tuple where
+        pro new fst snd
+
+    from builtin
+        mod num = number
+        mod js = js
+        from js
+            mod eff = effect
+            from effect
+                mod console = console
+                from console
+                    val log = log
+in let
+    # amazing module about booleans! #
+    mod bool where
+        let
+            sum match false true
+        in
+            let val
+                match t f = match (\v = t) (\v = f)
+                true = true unit.new
+                false = false unit.new
+            in val
+                match = match
+                true = true
+                false = false
+                not = match true false
+
+in let
+    mod either where
+        let sum match left right
+        in let val isleft = match (\v = bool.true) (\v = bool.false)
+        in val
+            match = match
+            left = left
+            right = right
+            isleft = isleft
+            isright v = bool.not (isleft v)
+            usEdCool123Wow = builtin.js.effect.console.log $ if builtin.bool.false | builtin.bool.false then 10 + 20 else 555
+in let
+    from either val
+        coolio = usEdCool123Wow
+in
+    val main = log $ num.eq 10 10

@@ -160,6 +160,8 @@ pub fn val_out(value: &val::Out, globe: &Globe) -> String {
             val::out::Number::Mul => binary_function(|l, r| format!("{l} * {r}")),
             val::out::Number::Div => binary_function(|l, r| format!("{l} / {r}")),
             val::out::Number::Modulo => binary_function(|l, r| format!("{l} % {r}")),
+            val::out::Number::IsEqual => binary_function(|l, r| format!("{l} == {r}")),
+            val::out::Number::IsGreater => binary_function(|l, r| format!("{l} > {r}")),
         },
         val::Out::Boolean(v) => match v {
             val::out::Boolean::Init(v) => if *v { format!("true") } else { format!("false") },

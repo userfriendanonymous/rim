@@ -1,4 +1,4 @@
-use std::{fs::File, io::Write, collections::BTreeMap};
+use std::{fs::File, io::{Write, Read}, collections::BTreeMap};
 use ariadne::{Label, Source};
 use chumsky::Parser;
 use depending::Dependency;
@@ -9,73 +9,12 @@ mod target;
 mod resolution;
 mod depending;
 
-const CODE: &str =
-r#"
-let
-    val
-        add = builtin.number.add
-        sub = builtin.number.sub
-        mul = builtin.number.mul
-        div = builtin.number.div
-    mod unit where
-        pro new
-    mod tuple where
-        pro new fst snd
-in let
-    # amazing module about booleans! #
-    mod bool where
-        let
-            sum match false true
-        in
-            let val
-                match t f = match (\v = t) (\v = f)
-                true = true unit.new
-                false = false unit.new
-            in val
-                match = match
-                true = true
-                false = false
-                not = match true false
-
-in let
-    mod either where
-        let sum match left right
-        in let val isleft = match (\v = bool.true) (\v = bool.false)
-        in val
-            match = match
-            left = left
-            right = right
-            isleft = isleft
-            isright v = bool.not (isleft v)
-            usEdCool123Wow = builtin.js.effect.console.log $ if (builtin.bool.false | builtin.bool.false) then 10 + 20 else 555
-in let
-    from either val
-        coolio = usEdCool123Wow
-in
-    val main = builtin.js.effect.chain
-        ( builtin.js.effect.chain
-            (builtin.js.effect.console.log $ builtin.bool.true & (builtin.bool.false | builtin.bool.true))
-            (builtin.js.effect.console.log "lol, those effects are chained!"))
-            coolio
-"#;
-
-const CODE_: &str =
-r#"
-let
- mod idk where
-  let val
-   so =
-    5
-   idk = 10
-  in val
-   x = 10
-in val
- main = idk.x
-"#;
-
 fn main() {
+    let mut code = String::new();
+    File::open("code.rim").unwrap().read_to_string(&mut code).unwrap();
+
     let parser = parsing::value(Default::default());
-    let syntax = parser.parse(CODE);
+    let syntax = parser.parse(code.clone());
 
     match syntax {
         Ok(syntax) => {
@@ -102,7 +41,7 @@ fn main() {
                     )
                     .with_note("Note!")
                     .finish()
-                    .print(Source::from(CODE.clone()))
+                    .print(Source::from(code.clone()))
                     .unwrap();
             }
         }

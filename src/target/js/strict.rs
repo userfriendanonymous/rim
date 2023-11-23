@@ -118,6 +118,8 @@ pub fn val_out(value: &val::Out, globe: &Globe) -> String {
             val::out::Number::Mul => format!("($l => $r => $l * $r)"),
             val::out::Number::Div => format!("($l => $r => $l / $r)"),
             val::out::Number::Modulo => format!("($l => $r => $l % $r"),
+            val::out::Number::IsEqual => format!("($l => $r => $l == $r"),
+            val::out::Number::IsGreater => format!("($l => $r => $l > $r"),
         },
         val::Out::Boolean(v) => match v {
             val::out::Boolean::Init(v) => if *v { "true" } else { "false" }.into(),

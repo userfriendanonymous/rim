@@ -7,4 +7,6 @@ pub enum Value {
     Mul,
     Div,
     Modulo,
+    IsGreater,
+    IsEqual,
 }

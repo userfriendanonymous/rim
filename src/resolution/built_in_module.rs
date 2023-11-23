@@ -10,12 +10,18 @@ pub fn create(globe: &mut Globe) -> module::Where {
                 .with_val("sub", Out::Number(Number::Sub))
                 .with_val("mul", Out::Number(Number::Mul))
                 .with_val("div", Out::Number(Number::Div))
+                .with_val("mod", Out::Number(Number::Modulo))
+                .with_val("eq", Out::Number(Number::IsEqual))
+                .with_val("gt", Out::Number(Number::IsGreater))
         })
         .nest_module("bool", |m| {
             use val::out::{Boolean, boolean};
             m
                 .with_val("true", Out::Boolean(Boolean::Init(true)))
                 .with_val("false", Out::Boolean(Boolean::Init(false)))
+                .with_val("match", Out::Boolean(Boolean::Match))
+                .with_val("and", Out::Boolean(Boolean::And))
+                .with_val("or", Out::Boolean(Boolean::Or))
         })
         .nest_module("js", |m| {
             use val::out::{js, Js};
