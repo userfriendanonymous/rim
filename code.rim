@@ -19,6 +19,7 @@ let
                 from console
                     val log = log
 in let
+    val withSelf = (\f = f f) (\self f = f $ self self f)
     # amazing module about booleans! #
     mod bool where
         let
@@ -45,8 +46,14 @@ in let
             isleft = isleft
             isright v = bool.not (isleft v)
             usEdCool123Wow = builtin.js.effect.console.log $ if builtin.bool.false | builtin.bool.false then 10 + 20 else 555
+
+    val factorial = withSelf \self x =
+        if num.eq x 0 then 1 else x * self (x - 1)
+
+    val iter = withSelf \self x =
+        if num.eq x 0 then 0 else 1 + self (x - 1)
 in let
     from either val
         coolio = usEdCool123Wow
 in
-    val main = log $ num.eq 10 10
+    val main = log $ iter 100000

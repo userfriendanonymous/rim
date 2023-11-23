@@ -1,7 +1,7 @@
-let v5 = ($l => $r => $l == $r
-let v6 = ($l => $r => $l > $r
+let v5 = ($l => $r => $l == $r)
+let v6 = ($l => $r => $l > $r)
 let v0 = ($l => $r => $l + $r)
-let v4 = ($l => $r => $l % $r
+let v4 = ($l => $r => $l % $r)
 let v2 = ($l => $r => $l * $r)
 let v3 = ($l => $r => $l / $r)
 let v1 = ($l => $r => $l - $r)
@@ -21,28 +21,31 @@ let v22 = v13
 let v16 = v2
 let v17 = v3
 let v15 = v1
-let v25 = $ => [1, $]
-let v24 = $ => [0, $]
-let v23 = ($0 => $1 => $sum => { if ($sum[0] == 0) { return $0($sum[1]) } else if ($sum[0] == 1) { return $1($sum[1]) } else { throw new Error('Sum type mismatch: $sum[0] is not in range of possible branches!') } })
-let v31 = v25(v18)
-let v32 = v24(v18)
-let v30 = (v26 => (v27 => v23((v28 => v26))((v29 => v27))))
-let v34 = v31
-let v35 = v32
-let v36 = v30(v31)(v32)
-let v33 = v30
-let v39 = $ => [1, $]
-let v38 = $ => [0, $]
-let v37 = ($0 => $1 => $sum => { if ($sum[0] == 0) { return $0($sum[1]) } else if ($sum[0] == 1) { return $1($sum[1]) } else { throw new Error('Sum type mismatch: $sum[0] is not in range of possible branches!') } })
-let v42 = v37((v40 => v34))((v41 => v35))
-let v51 = (v49 => (v50 => v49(v50)))(v13)(($f => $t => $v => $v ? $t : $f)(555)(($l => $r => $l + $r)(10)(20))(($l => $r => $l || $r)(v8)(v8)))
-let v45 = v39
-let v48 = (v47 => v36(v42(v47)))
-let v46 = v42
-let v44 = v38
-let v43 = v37
-let v52 = v51
-let v55 = (v53 => (v54 => v53(v54)))(v22)(v5(10)(10))
+let v31 = $ => [1, $]
+let v30 = $ => [0, $]
+let v29 = ($0 => $1 => $sum => { if ($sum[0] == 0) { return $0($sum[1]) } else if ($sum[0] == 1) { return $1($sum[1]) } else { throw new Error('Sum type mismatch: $sum[0] is not in range of possible branches!') } })
+let v37 = v31(v18)
+let v38 = v30(v18)
+let v36 = (v32 => (v33 => v29((v34 => v32))((v35 => v33))))
+let v40 = v37
+let v41 = v38
+let v42 = v36(v37)(v38)
+let v39 = v36
+let v28 = (v23 => v23(v23))((v24 => (v25 => (v26 => (v27 => v26(v27)))(v25)(v24(v24)(v25)))))
+let v45 = $ => [1, $]
+let v44 = $ => [0, $]
+let v43 = ($0 => $1 => $sum => { if ($sum[0] == 0) { return $0($sum[1]) } else if ($sum[0] == 1) { return $1($sum[1]) } else { throw new Error('Sum type mismatch: $sum[0] is not in range of possible branches!') } })
+let v48 = v43((v46 => v40))((v47 => v41))
+let v57 = (v55 => (v56 => v55(v56)))(v13)(($f => $t => $v => $v ? $t : $f)(555)(($l => $r => $l + $r)(10)(20))(($l => $r => $l || $r)(v8)(v8)))
+let v51 = v45
+let v54 = (v53 => v42(v48(v53)))
+let v52 = v48
+let v50 = v44
+let v49 = v43
+let v63 = v28((v61 => (v62 => ($f => $t => $v => $v ? $t : $f)(($l => $r => $l + $r)(1)(v61(($l => $r => $l - $r)(v62)(1))))(0)(v5(v62)(0)))))
+let v60 = v28((v58 => (v59 => ($f => $t => $v => $v ? $t : $f)(($l => $r => $l * $r)(v59)(v58(($l => $r => $l - $r)(v59)(1))))(1)(v5(v59)(0)))))
+let v64 = v57
+let v67 = (v65 => (v66 => v65(v66)))(v22)(v63(100000))
 
 // MAIN
-v55()
+v67()
