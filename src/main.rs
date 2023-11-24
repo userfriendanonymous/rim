@@ -8,6 +8,7 @@ mod syntax;
 mod target;
 mod resolution;
 mod depending;
+mod project;
 
 fn main() {
     let mut code = String::new();

@@ -56,4 +56,4 @@ in let
     from either val
         coolio = usEdCool123Wow
 in
-    val main = log $ iter 100000
+    val main = log $ iter 100

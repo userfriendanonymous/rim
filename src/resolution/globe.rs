@@ -1,6 +1,5 @@
 use std::collections::BTreeMap;
 use super::{Id, Val, Module, Type, val, module};
-use crate::syntax::ident::from_str as ident;
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct ValId(Id);
