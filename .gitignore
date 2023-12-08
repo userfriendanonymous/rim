@@ -1,2 +1,6 @@
-/target
-Cargo.lock
+compiler/target/
+compiler/Cargo.lock
+library_server/target/
+library_server/Cargo.lock
+library_server/store/
+target/

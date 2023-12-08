@@ -1,0 +1,53 @@
+id :: forall a . a -> a
+forall x . Apply id x :: x
+any :: forall a . a
+convert :: (forall a . a) -> String
+convert any :: String
+
+any = (\f = f f) (\f = f f)
+
+
+
+
+FLOW Finds bounds for (read <- write)
+forall   . S -> N
+forall a . a -> N
+
+{ Bounds a = S }
+
+
+MERGE Tries to find a lowest type that can act as both
+forall a . a -> N
+forall   . S -> N
+
+forall a . a -> N { Bounds }
+
+
+MERGE
+a -> N
+S -> N
+forall x . x -> N
+
+
+MERGE_BOUNDS
+{ Bounds a = b = c -> Number }
+{ Bounds a = b = d -> forall x . x }
+
+{ Bounds a = b = c = d -> forall x . x }
+
+forall   . (forall b . b) -> N
+forall a . a -> N
+{ Bounds a = Some (forall b . b) }
+
+forall x . x
+forall a . Maybe a
+
+forall a . Maybe a
+forall   . y
+forall a . (y = Maybe a)
+
+
+x = forall a . Maybe a
+forall a . x
+
+forall a .
