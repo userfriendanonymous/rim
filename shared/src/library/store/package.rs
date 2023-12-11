@@ -1,7 +1,7 @@
 use std::{fmt::Display, str::FromStr};
 use chumsky::{Parser, primitive::just, error::Simple};
 use serde::{Serialize, Deserialize};
-use crate::Ident;
+use crate::{Ident, PackageId as Id};
 use super::Dependency;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -55,4 +55,5 @@ impl FromStr for Path {
 #[derive(Serialize, Deserialize)]
 pub struct Meta {
     pub dependencies: Vec<Dependency>,
+    pub id: Id,
 }

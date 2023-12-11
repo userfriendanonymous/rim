@@ -53,12 +53,10 @@ pub fn out<'a>(input: &'a syntax::Val, env: Env, globe: &mut Globe) -> Result<Ou
             )
             
         },
-        syntax::Val::String(v) => {
-            Out::String(out::String::Value(v.clone()))
-        },
-        syntax::Val::Number(v) => {
-            Out::Number(out::Number::Value(v.clone()))
-        },
+        syntax::Val::String(v) => Out::String(v.clone()),
+        syntax::Val::Number(v) => Out::Number(v.clone()),
+        syntax::Val::Js(v) => Out::Js(v.clone()),
+        syntax::Val::Boolean(v) => Out::Boolean(v.clone()),
         syntax::Val::InfixOp(op) => match op {
             syntax::val::InfixOp::Add => Out::Number(out::Number::Add),
             syntax::val::InfixOp::Sub => Out::Number(out::Number::Sub),

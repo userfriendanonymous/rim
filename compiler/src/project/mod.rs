@@ -1,10 +1,10 @@
-use std::{path::{Path, PathBuf}, collections::BTreeMap};
+use std::{path::{Path, PathBuf}, collections::BTreeMap, sync::Arc};
 use crate::{syntax::{Ident, Value as Syntax, self, module::Module}, parsing, target};
 use async_recursion::async_recursion;
 use chumsky::Parser;
 use tokio::{fs::{File, read_to_string}, io};
 use kdl::{KdlDocument, KdlError};
-use shared::library::store::Dependency;
+use shared::{PackageId, library::store::Dependency};
 use config::Value as Config;
 use package::Value as Package;
 use library_server::Value as LibraryServer;
@@ -15,12 +15,43 @@ mod config;
 mod library_server;
 mod fs;
 
-pub struct Packages {
-    items: BTreeMap<package::Id, package::Value>,
+pub type Dependencies = BTreeMap<Ident, Dependency>;
+
+pub struct Packages(BTreeMap<PackageId, syntax::Value>);
+
+
+
+pub struct Manager {
+    packages_cache_path: PathBuf,
+    path: PathBuf,
+    library_server: Arc<LibraryServer>,
 }
 
-pub struct Value {
-    packages_cache_path: PathBuf,
+impl Manager {
+    async fn packages(&self) -> Result<Packages, PackagesError> {
+        type E = PackagesError;
+        let config = self.config().await.map_err(E::Config)?;
+        for (name, dependency) in config.dependencies {
+            dependency::to_package(dependency, &self.library_server);
+        }
+        todo!()
+    }
+
+    async fn config(&self) -> Result<Config, ConfigError> {
+        type E = ConfigError;
+        let config_str = read_to_string(self.path.join("config.json")).await.map_err(E::Io)?;
+        let config = serde_json::from_str(&config_str).map_err(E::Deserialize)?;
+        Ok(config)
+    }
+}
+
+pub enum PackagesError {
+    Config(ConfigError)
+}
+
+pub enum ConfigError {
+    Io(io::Error),
+    Deserialize(serde_json::Error),
 }
 
 impl Value {

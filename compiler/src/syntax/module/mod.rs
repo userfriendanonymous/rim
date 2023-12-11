@@ -1,4 +1,9 @@
 use super::{Ident, Val, Path};
+pub use builder::Value as Builder;
+
+mod builder;
+
+pub type Value = Vec<Item>;
 
 #[derive(Clone, Debug)]
 pub enum Item {

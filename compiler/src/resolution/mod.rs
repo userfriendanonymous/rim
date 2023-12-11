@@ -12,7 +12,6 @@ pub mod module;
 pub mod globe;
 pub mod id;
 pub mod r#type;
-pub mod built_in_module;
 // pub mod type_check;
 
 pub fn value<'a>(syntax: &'a syntax::Value, env: Env, globe: &mut Globe) -> Result<Env, module::Error<'a>> {

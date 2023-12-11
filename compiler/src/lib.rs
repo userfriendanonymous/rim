@@ -3,14 +3,13 @@
 use std::{fs::File, io::{Write, Read}, collections::BTreeMap};
 use ariadne::{Label, Source};
 use chumsky::Parser;
-use depending::Dependency;
 
 pub mod parsing;
 pub mod syntax;
 pub mod target;
 pub mod resolution;
-mod depending;
 pub mod project;
+pub mod built_in_module;
 
 #[test]
 fn main() {
