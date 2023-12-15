@@ -1,9 +1,9 @@
-use crate::resolution::{Env, Globe, val, Id, Module, module};
+use crate::resolution::{Env, Globe, val, Id, Module, module, globe::ValId};
 
-pub fn value(env: &Env, globe: &Globe) -> String {
+pub fn value(env: &Env, globe: &Globe, val_id: ValId) -> String {
     let main = format!(
         "{}()",
-        id(&env.val_id(&"main".into()).unwrap().unwrap())
+        id(&val_id.unwrap())
     );
 
     format!(
@@ -122,7 +122,7 @@ pub fn val_out(value: &val::Out, globe: &Globe) -> String {
             val::out::Number::IsGreater => format!("($l => $r => $l > $r)"),
         },
         val::Out::Boolean(v) => match v {
-            val::out::Boolean::Init(v) => if *v { "true" } else { "false" }.into(),
+            val::out::Boolean::Value(v) => if *v { "true" } else { "false" }.into(),
             val::out::Boolean::And => "($l => $r => $l && $r)".into(),
             val::out::Boolean::Or => "($l => $r => $l || $r)".into(),
             val::out::Boolean::Match => "($f => $t => $v => $v ? $t : $f)".into()

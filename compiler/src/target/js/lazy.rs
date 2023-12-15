@@ -1,8 +1,8 @@
 use std::fmt::Display;
 
-use crate::resolution::{Env, Globe, val, Id, Module, module};
+use crate::resolution::{Env, Globe, val, Id, Module, module, globe::ValId};
 
-pub fn value(env: &Env, globe: &Globe) -> String {
+pub fn value(env: &Env, globe: &Globe, val_id: ValId) -> String {
     let utils = format!(
         "{}",
         format!("let $unwrap = wrapped => {{ let output = wrapped[0](); wrapped[0] = () => output; return output }}\n"),
@@ -10,7 +10,7 @@ pub fn value(env: &Env, globe: &Globe) -> String {
 
     let main = format!(
         "{}()",
-        unwrap_val_out(id(&env.val_id(&"main".into()).unwrap().unwrap()))
+        unwrap_val_out(id(&val_id.unwrap()))
     );
 
     format!(
@@ -164,7 +164,7 @@ pub fn val_out(value: &val::Out, globe: &Globe) -> String {
             val::out::Number::IsGreater => binary_function(|l, r| format!("{l} > {r}")),
         },
         val::Out::Boolean(v) => match v {
-            val::out::Boolean::Init(v) => if *v { format!("true") } else { format!("false") },
+            val::out::Boolean::Value(v) => if *v { format!("true") } else { format!("false") },
             val::out::Boolean::And => binary_function(|l, r| format!("{l} && {r}")),
             val::out::Boolean::Or => binary_function(|l, r| format!("{l} || {r}")),
             val::out::Boolean::Match => nested_function_const(|[f, t, v]| format!("{v} ? {t} : {f}"))

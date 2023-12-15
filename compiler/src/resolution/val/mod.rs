@@ -12,17 +12,17 @@ pub enum Value {
 
 
 #[derive(Clone, Debug)]
-pub enum Error<'a> {
-    PathNotFound(&'a [Ident], Option<usize>),
-    LetInInput(Box<module::Error<'a>>)
+pub enum Error {
+    PathNotFound(Vec<Ident>, Option<usize>),
+    LetInInput(Box<module::Error>)
 }
 
-pub fn out<'a>(input: &'a syntax::Val, env: Env, globe: &mut Globe) -> Result<Out, Error<'a>> {
-    type E<'a> = Error<'a>;
+pub fn out<'a>(input: &'a syntax::Val, env: Env, globe: &mut Globe) -> Result<Out, Error> {
+    type E = Error;
 
     Ok(match input {
         syntax::Val::Ref(path) => {
-            Out::Ref(*env.val_id_by_path(path, &globe).map_err(|e| E::PathNotFound(&path.items, e))?)
+            Out::Ref(*env.val_id_by_path(path, &globe).map_err(|e| E::PathNotFound(path.items.clone(), e))?)
         }
         syntax::Val::Apply(f, input) => {
             let f = out(f.as_ref(), env.clone(), globe)?;

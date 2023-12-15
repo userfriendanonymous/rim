@@ -1,3 +1,4 @@
+use crate::target;
 use super::{Ident, Val, Path};
 pub use builder::Value as Builder;
 
@@ -13,7 +14,8 @@ pub enum Item {
     Module(Ident, Module),
     Sum(Ident, Vec<Ident>),
     Product(Ident, Vec<Ident>),
-    Enum(Ident, Vec<Ident>)
+    Enum(Ident, Vec<Ident>),
+    Target(target::Type, Ident, Path),
 }
 
 #[derive(Clone, Debug)]

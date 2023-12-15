@@ -6,12 +6,12 @@ use tokio::{io, fs};
 use crate::{syntax::{Value as Syntax, self, module::Module}, parsing};
 
 #[derive(Clone)]
-pub struct FileModule {
+pub struct Ptr {
     path: PathBuf,
     name: Ident,
 }
 
-impl FileModule {
+impl Ptr {
     pub fn new(path: PathBuf, name: Ident) -> Self {
         Self {
             path,
@@ -77,12 +77,13 @@ impl FileModule {
                 if let Some(left) = left { Some(Box::new(self.clone().resolve_val(*left).await?)) } else { None },
                 if let Some(right) = right { Some(Box::new(self.clone().resolve_val(*right).await?)) } else { None }
             ),
-            Val::LetIn(input, output) => Val::LetIn(self.resolve_module_where(input).await?, Box::new(self.clone().resolve_val(*output).await?)),
+            Val::LetIn(input, output) => Val::LetIn(self.clone().resolve_module_where(input).await?, Box::new(self.clone().resolve_val(*output).await?)),
             v => v,
         })
     }
 }
 
+#[derive(Debug)]
 pub enum ResolveError {
     Io(io::Error),
     Parsing(Vec<chumsky::error::Simple<char>>),

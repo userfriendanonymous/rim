@@ -1,4 +1,4 @@
-use std::{fmt::Display, str::FromStr};
+use std::{fmt::Display, str::FromStr, collections::BTreeMap};
 use chumsky::{Parser, primitive::just, error::Simple};
 use serde::{Serialize, Deserialize};
 use crate::{Ident, PackageId as Id};
@@ -54,6 +54,6 @@ impl FromStr for Path {
 
 #[derive(Serialize, Deserialize)]
 pub struct Meta {
-    pub dependencies: Vec<Dependency>,
+    pub dependencies: BTreeMap<Ident, Dependency>,
     pub id: Id,
 }

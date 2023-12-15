@@ -3,8 +3,6 @@ name = "compiler"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
 chumsky = "0.9.3"
 either = "1.9.0"

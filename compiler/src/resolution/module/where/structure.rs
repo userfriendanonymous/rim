@@ -1,5 +1,5 @@
 use std::collections::BTreeMap;
-use crate::{syntax::Ident, resolution::globe::{ModuleId, ValId}};
+use crate::{syntax::Ident, resolution::globe::{ModuleId, ValId}, target};
 
 #[derive(Clone, Debug, Default)]
 pub struct LetIn {
@@ -21,6 +21,7 @@ pub struct Value {
     let_ins: Vec<LetIn>,
     modules: BTreeMap<Ident, ModuleId>,
     vals: BTreeMap<Ident, ValId>,
+    targets: BTreeMap<target::Type, BTreeMap<Ident, ValId>>
 }
 
 impl Value {
@@ -36,6 +37,12 @@ impl Value {
 
     pub fn shadow_module(&mut self, name: Ident, id: ModuleId) {
         self.modules.insert(name, id);
+    }
+
+    pub fn shadow_target(&mut self, r#type: target::Type, name: Ident, id: ValId) {
+        self.targets.entry(r#type)
+            .or_insert(Default::default())
+            .insert(name, id);
     }
 
     pub fn add_let_in(&mut self, value: LetIn) {

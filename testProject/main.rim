@@ -1,0 +1,5 @@
+
+let
+    mod console = builtIn.js.effect.console
+in
+    val jsMain = console.log "Hello world!"

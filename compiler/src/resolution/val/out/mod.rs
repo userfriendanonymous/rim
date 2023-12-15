@@ -2,6 +2,7 @@ use crate::resolution::{globe::ValId, module};
 pub use crate::syntax::val::{Number, Boolean, String, Js};
 pub use sum::Value as Sum;
 pub use product::Value as Product;
+pub use crate::syntax::val::{js, number, string};
 
 pub mod sum;
 pub mod product;

@@ -1,3 +1,3 @@
 [workspace]
-members = ["compiler", "library_server", "shared", "macros"]
+members = ["compiler", "library_server", "shared", "macros", "cli"]
 resolver = "2"

@@ -4,6 +4,6 @@ use super::package;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum Value {
-    Builtin,
+    BuiltIn,
     Library(package::Path),
 }

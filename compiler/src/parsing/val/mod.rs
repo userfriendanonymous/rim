@@ -1,5 +1,5 @@
 use chumsky::{Parser, text::keyword, prelude::Simple, primitive::{just, empty}};
-use crate::syntax::{val::{Value, infix::value as infix, InfixOp}, Number, Path};
+use crate::syntax::{val::{self as value, Value, infix::value as infix, InfixOp}, Number, Path};
 use super::{space, space::IndentBound, path, module, function};
 use infix_apply::{left as infix_apply_left, right as infix_apply_right};
 pub use infix::value as infix;
@@ -73,8 +73,8 @@ pub fn value(ind: IndentBound) -> impl Parser<char, Value, Error = Simple<char>>
                     Level1::Val => val_in(ind).boxed(),
                     Level1::If => r#if(ind).boxed(),
                     Level1::Lambda => function::value(ind).boxed(),
-                    Level1::Number(v) => empty().to(Value::Number(v)).boxed(),
-                    Level1::String(v) => empty().to(Value::String(v)).boxed(),
+                    Level1::Number(v) => empty().to(Value::Number(value::Number::Value(v))).boxed(),
+                    Level1::String(v) => empty().to(Value::String(value::String::Value(v))).boxed(),
                     Level1::Path(v) => empty().to(Value::Ref(v)).boxed()
                 }
             }).boxed();

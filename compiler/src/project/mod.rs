@@ -1,40 +1,33 @@
 use std::{path::{Path, PathBuf}, collections::BTreeMap, sync::Arc};
-use crate::{syntax::{Ident, Value as Syntax, self, module::Module}, parsing, target};
+use crate::{syntax::{Ident, Value as Syntax, self, module::Module}, parsing, target, resolution};
 use async_recursion::async_recursion;
 use chumsky::Parser;
-use tokio::{fs::{File, read_to_string}, io};
+use tokio::{fs::{File, read_to_string, OpenOptions}, io::{self, AsyncWriteExt}};
 use kdl::{KdlDocument, KdlError};
 use shared::{PackageId, library::store::Dependency};
 use config::Value as Config;
-use package::Value as Package;
-use library_server::Value as LibraryServer;
+use packages_map::Value as PackagesMap;
+pub use library_server::Value as LibraryServer;
 
-mod package;
+mod packages_map;
 mod dependency;
 mod config;
-mod library_server;
-mod fs;
+pub mod library_server;
+mod file_module;
 
-pub type Dependencies = BTreeMap<Ident, Dependency>;
-
-pub struct Packages(BTreeMap<PackageId, syntax::Value>);
-
-
-
-pub struct Manager {
+pub struct Pointer {
     packages_cache_path: PathBuf,
     path: PathBuf,
     library_server: Arc<LibraryServer>,
 }
 
-impl Manager {
-    async fn packages(&self) -> Result<Packages, PackagesError> {
-        type E = PackagesError;
-        let config = self.config().await.map_err(E::Config)?;
-        for (name, dependency) in config.dependencies {
-            dependency::to_package(dependency, &self.library_server);
+impl Pointer {
+    pub fn new(path: PathBuf, packages_cache_path: PathBuf, library_server: Arc<LibraryServer>) -> Self {
+        Self {
+            path,
+            packages_cache_path,
+            library_server,
         }
-        todo!()
     }
 
     async fn config(&self) -> Result<Config, ConfigError> {
@@ -43,54 +36,66 @@ impl Manager {
         let config = serde_json::from_str(&config_str).map_err(E::Deserialize)?;
         Ok(config)
     }
+
+    pub async fn compile(&self) -> Result<(), CompileError> {
+        type E = CompileError;
+        use crate::syntax::module;
+
+        let config = self.config().await.map_err(E::Config)?;
+        let syntax = file_module::Ptr::new(self.path.clone(), "main".into())
+            .resolve().await.map_err(E::FileModule)?;
+        let (dependencies, packages_map) = dependency::resolve_many(config.dependencies, &self.library_server).await.unwrap();
+        let map_item = packages_map::Item {
+            dependencies,
+            syntax
+        };
+        
+        let packages_syntax = packages_map.to_syntax();
+        let syntax = vec![module::Item::LetIn(
+            packages_syntax,
+            map_item.to_syntax()
+        )];
+
+        let mut globe = resolution::Globe::new();
+        let env = resolution::value(&syntax, resolution::Env::default(), &mut globe).map_err(E::Resolution)?;
+
+        let dir = self.path.join("output").join("js");
+        tokio::fs::create_dir_all(dir.clone()).await.map_err(E::Io)?;
+
+        for name in config.targets.js {
+            let val_id = env.val_id(&name).ok_or(E::ValNotFound(name.clone()))?.clone();
+            let string = target::Type::Js.compile(&env, &mut globe, val_id);
+            let mut file = File::create(dir.join(format!("{name}.js"))).await.map_err(E::Io)?;
+            file.write_all(string.as_bytes()).await.map_err(E::Io)?;
+        }
+
+        Ok(())
+    }
 }
 
+#[derive(Debug)]
+pub enum ToSyntaxError {
+    Resolve(file_module::ResolveError),
+    Packages(PackagesError),
+}
+
+#[derive(Debug)]
 pub enum PackagesError {
-    Config(ConfigError)
+    Config(ConfigError),
+    ResolveDependencies(dependency::ResolveMapError)
 }
 
+#[derive(Debug)]
 pub enum ConfigError {
     Io(io::Error),
     Deserialize(serde_json::Error),
 }
 
-impl Value {
-    pub async fn resolve(&self, path: PathBuf) -> Result<Syntax, ResolveError> {
-        type E = ResolveError;
-        let config_content = read_to_string(path.join("config.json")).await.map_err(E::Io)?;
-        let config = serde_json::from_str::<Config>(&config_content).map_err(E::ParseConfig)?;
-        config.dependencies
-    }
-}
-
-pub async fn resolve(path: PathBuf) -> Result<Syntax, ResolveFileModuleError> {
-
-    let config_content = read_to_string(path.join("config.kdl")).await.map_err(E::ReadFile)?;
-    let config_doc = config_content.parse::<KdlDocument>().map_err(E::ParseConfig)?;
-    let config = resolve_config(config_doc).map_err(E::Config)?;
-
-    let ptr = FileModule { path, name: "src".into() };
-    resolve_file_module(ptr).await
-}
-
-pub fn resolve_config(doc: KdlDocument) -> Result<(), ConfigError> {
-    type E = ConfigError;
-    let imports = doc.get("imports").ok_or(E::ImportsNotFound)?;
-    let imports_nodes = imports.children().ok_or(E::ImportsChildrenNotFound)?.nodes();
-    for node in imports_nodes {
-        let name = node.name().to_string();
-        let mut entries = node.entries().into_iter();
-        match entries.next().ok_or(E::ImportTypeNotFound)?.value().as_string().ok_or(E::ImportTypeNotFound)? {
-            "package" => {
-                let name = entries.next().ok_or(E::ImportPackageNameMissing)?.value().as_string().ok_or(E::ImportPackageNameMissing)?;
-                let version = entries.next().ok_or(E::ImportPackageVersionMissing)?.value().as_i64().ok_or(E::ImportPackageVersionMissing)?;
-                Dependency::Package(name.into(), version as _)
-            },
-            "builtin" => {
-                let version = entries.next().ok_or(E::ImportBuiltinVersionMissing)?.value().as_i64().ok_or(E::ImportBuiltinVersionMissing)?;
-                Dependency::Builtin(version as _)
-            }
-        }
-    }
-    Ok(())
+#[derive(Debug)]
+pub enum CompileError {
+    Config(ConfigError),
+    ValNotFound(Ident),
+    Io(io::Error),
+    Resolution(resolution::module::Error),
+    FileModule(file_module::ResolveError),
 }

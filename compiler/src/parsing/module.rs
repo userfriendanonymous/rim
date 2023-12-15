@@ -1,6 +1,6 @@
 use chumsky::{Parser, prelude::Simple, text::keyword, primitive::{just, any, empty}, Error};
 use super::{function, ident, space, space::IndentBound, path};
-use crate::syntax::module::{Module, Item};
+use crate::{syntax::module::{Module, Item}, target};
 
 #[derive(Clone, Debug)]
 enum ItemType {
@@ -11,6 +11,7 @@ enum ItemType {
     Product,
     Enum,
     From,
+    // Target,
 }
 
 
@@ -117,6 +118,27 @@ pub fn value(ind: IndentBound) -> impl Parser<char, Vec<Item>, Error = Simple<ch
                 .map(|(path, items)| Item::From(path, items))
         })
         .repeated();
+
+    // let target = |ind: IndentBound| space(ind + 1)
+    //     .then_with(|ind| {
+    //         let ind: IndentBound = ind.into();
+    //         just("js").to(target::Type::Js)
+    //             .then_with(move |r#type| {
+    //                 space(ind + 1)
+    //                     .then_with(move |ind| {
+    //                         let ind: IndentBound = ind.into();
+    //                         ident()
+    //                             .then_ignore(space(ind + 1))
+    //                             .then(path())
+    //                             .map(move |(name, path)| {
+    //                                 Item::Target(r#type, name, path)
+    //                             })
+    //                     })
+    //                     .repeated()
+    //             })
+    //     })
+    //     .repeated()
+    //     .map(|items| items.into_iter().flatten().collect::<Vec<_>>());
     
     space(ind)
         .then_with(move |ind| {
@@ -128,6 +150,7 @@ pub fn value(ind: IndentBound) -> impl Parser<char, Vec<Item>, Error = Simple<ch
                 .or(just("pro").to(ItemType::Product))
                 .or(just("enum").to(ItemType::Enum))
                 .or(just("from").to(ItemType::From))
+                // .or(just("target").to(ItemType::Target))
                 .then_with(move |r#type| {
                     match r#type {
                         ItemType::Val => val(ind).boxed(),
@@ -137,6 +160,7 @@ pub fn value(ind: IndentBound) -> impl Parser<char, Vec<Item>, Error = Simple<ch
                         ItemType::Product => product(ind).boxed(),
                         ItemType::Enum => r#enum(ind).boxed(),
                         ItemType::From => from(ind).boxed(),
+                        // ItemType::Target => target(ind).boxed()
                     }
                 })
                 .map(Ok)

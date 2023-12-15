@@ -2,7 +2,7 @@
 #[derive(PartialEq, Eq, Hash, Clone, Debug, PartialOrd, Ord)]
 pub enum Value {
     WithCasing(bool, WithCasing),
-    One, Two, Three,
+    Zero, One, Two, Three, Four, Five, Six, Seven, Eight, Nine,
 }
 
 #[derive(PartialEq, Eq, Hash, Clone, Debug, PartialOrd, Ord)]
@@ -15,29 +15,63 @@ pub enum WithCasing {
 impl Value {
     pub fn to_char(&self) -> char {
         match self {
-            Self::WithCasing(is_upper, v) => match v {
-                WithCasing::Q => 'q',
-                WithCasing::W => 'w',
-                WithCasing::E => 'e',
-                WithCasing::R => 'r',
-                WithCasing::T => 't',
-                WithCasing::Y => 'y',
-                WithCasing::U => 'u',
-                WithCasing::I => 'i',
-                WithCasing::O => 'o',
-                WithCasing::P => 'p',
-                _ => todo!()
+            Self::WithCasing(is_upper, v) => {
+                let lowercase = match v {
+                    WithCasing::Q => 'q',
+                    WithCasing::W => 'w',
+                    WithCasing::E => 'e',
+                    WithCasing::R => 'r',
+                    WithCasing::T => 't',
+                    WithCasing::Y => 'y',
+                    WithCasing::U => 'u',
+                    WithCasing::I => 'i',
+                    WithCasing::O => 'o',
+                    WithCasing::P => 'p',
+                    WithCasing::A => 'a',
+                    WithCasing::S => 's',
+                    WithCasing::D => 'd',
+                    WithCasing::F => 'f',
+                    WithCasing::G => 'g',
+                    WithCasing::H => 'h',
+                    WithCasing::J => 'j',
+                    WithCasing::K => 'k',
+                    WithCasing::L => 'l',
+                    WithCasing::Z => 'z',
+                    WithCasing::X => 'x',
+                    WithCasing::C => 'c',
+                    WithCasing::V => 'v',
+                    WithCasing::B => 'b',
+                    WithCasing::N => 'n',
+                    WithCasing::M => 'm',
+                };
+                if *is_upper { lowercase.to_ascii_uppercase() } else { lowercase }
             },
-            _ => todo!()
+            Self::Zero => '0',
+            Self::One => '1',
+            Self::Two => '2',
+            Self::Three => '3',
+            Self::Four => '4',
+            Self::Five => '5',
+            Self::Six => '6',
+            Self::Seven => '7',
+            Self::Eight => '8',
+            Self::Nine => '9',
         }
     }
 
     pub fn from_char(value: char) -> Option<Value> {
         Some(match value {
+            '0' => Value::Zero,
             '1' => Value::One,
             '2' => Value::Two,
             '3' => Value::Three,
-            _ => Value::WithCasing(value.is_ascii_lowercase(), match value.to_ascii_lowercase() {
+            '4' => Value::Four,
+            '5' => Value::Five,
+            '6' => Value::Six,
+            '7' => Value::Seven,
+            '8' => Value::Eight,
+            '9' => Value::Nine,
+            _ => Value::WithCasing(value.is_ascii_uppercase(), match value.to_ascii_lowercase() {
                 'q' => WithCasing::Q,
                 'w' => WithCasing::W,
                 'e' => WithCasing::E,
@@ -65,8 +99,7 @@ impl Value {
                 'n' => WithCasing::N,
                 'm' => WithCasing::M,
                 _ => None?
-            }),
-            _ => None?
+            })
         })
     }    
 }

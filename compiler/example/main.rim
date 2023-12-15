@@ -1,0 +1,5 @@
+
+let
+    mod cool file greatJobCool
+in
+    val jsMain = cool.fire

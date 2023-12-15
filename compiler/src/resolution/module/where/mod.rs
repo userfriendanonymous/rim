@@ -1,6 +1,7 @@
 use super::super::Globe;
 use crate::resolution::globe::{ValId, ModuleId, Store};
 use crate::syntax::{Ident, Path};
+use crate::target;
 pub use builder::Value as Builder;
 pub use public::{Value as Public, MergeCollision};
 pub use structure::Value as Structure;
@@ -64,6 +65,12 @@ impl Value {
     pub fn merge_module(&mut self, name: Ident, id: ModuleId) -> Result<(), ModuleId> {
         self.public.merge_module(name.clone(), id)?;
         self.structure.shadow_module(name, id);
+        Ok(())
+    }
+
+    pub fn merge_target(&mut self, r#type: target::Type, name: Ident, id: ValId) -> Result<(), ValId> {
+        self.public.merge_target(r#type, name.clone(), id)?;
+        self.structure.shadow_target(r#type, name, id);
         Ok(())
     }
 

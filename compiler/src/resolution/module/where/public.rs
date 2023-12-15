@@ -1,5 +1,5 @@
 use std::collections::BTreeMap;
-use crate::{syntax::Ident, resolution::globe::{ModuleId, ValId}};
+use crate::{syntax::Ident, resolution::globe::{ModuleId, ValId}, target};
 
 #[derive(Clone, Debug)]
 pub enum MergeCollision {
@@ -11,6 +11,7 @@ pub enum MergeCollision {
 pub struct Value {
     modules: BTreeMap<Ident, ModuleId>,
     vals: BTreeMap<Ident, ValId>,
+    targets: BTreeMap<target::Type, BTreeMap<Ident, ValId>>
 }
 
 impl Value {
@@ -42,6 +43,18 @@ impl Value {
         } else {
             self.shadow_module(name, id);
             Ok(())
+        }
+    }
+
+    pub fn merge_target(&mut self, r#type: target::Type, name: Ident, id: ValId) -> Result<(), ValId> {
+        let targets = self.targets.entry(r#type)
+            .or_insert(Default::default());
+        match targets.get(&name) {
+            Some(id) => Err(id.clone()),
+            None => {
+                targets.insert(name, id);
+                Ok(())
+            }
         }
     }
 
