@@ -1,0 +1,59 @@
+let
+    val
+        add = builtIn.number.add
+        sub = builtIn.number.sub
+        mul = builtIn.number.mul
+        div = builtIn.number.div
+    mod unit where
+        pro new
+    mod tuple where
+        pro new fst snd
+
+    from builtIn
+        mod num = number
+        mod js = js
+        from js
+            mod eff = effect
+            from effect
+                mod console = console
+                from console
+                    val log = log
+in let
+    val withSelf = (\f = f f) (\self f = f $ self self f)
+    # amazing module about booleans! #
+    mod bool where
+        let
+            sum match false true
+        in
+            let val
+                match t f = match (\v = t) (\v = f)
+                true = true unit.new
+                false = false unit.new
+            in val
+                match = match
+                true = true
+                false = false
+                not = match true false
+
+in let
+    mod either where
+        let sum match left right
+        in let val isleft = match (\v = bool.true) (\v = bool.false)
+        in val
+            match = match
+            left = left
+            right = right
+            isleft = isleft
+            isright v = bool.not (isleft v)
+            usEdCool123Wow = builtIn.js.effect.console.log $ if builtIn.bool.false | builtIn.bool.false then 10 + 20 else 555
+
+    val factorial = withSelf \self x =
+        if num.eq x 0 then 1 else x * self (x - 1)
+
+    val iter = withSelf \self x =
+        if num.eq x 0 then 0 else 1 + self (x - 1)
+in let
+    from either val
+        coolio = usEdCool123Wow
+in
+    val main = log $ iter 100

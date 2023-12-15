@@ -1,4 +1,4 @@
-use std::{path::PathBuf, sync::Arc};
+use std::{path::PathBuf, sync::Arc, process::Command};
 
 use clap::Parser;
 use compiler::project;
@@ -32,6 +32,9 @@ pub enum Args {
         at: PathBuf
     },
     Build,
+    RunJs {
+        name: String,
+    },
 }
 
 #[tokio::main]
@@ -48,6 +51,17 @@ async fn main() {
             let library_server = Arc::new(project::LibraryServer::new());
             project::Pointer::new(".".into(), "".into(), library_server)
                 .compile().await.unwrap();
+        },
+        Args::RunJs { name } => {
+            let library_server = Arc::new(project::LibraryServer::new());
+            project::Pointer::new(".".into(), "".into(), library_server)
+                .compile().await.unwrap();
+            Command::new("node")
+                .arg(format!("./output/js/{name}.js"))
+                .spawn()
+                .unwrap()
+                .wait()
+                .unwrap();
         }
     }
 }
@@ -58,3 +72,6 @@ async fn init_project(path: PathBuf) -> Result<(), io::Error> {
     create_dir_all(path.join("main")).await?;
     Ok(())
 }
+
+
+// ../target/debug/cli run-js jsMain

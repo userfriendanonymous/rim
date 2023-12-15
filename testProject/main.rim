@@ -1,5 +1,6 @@
 
 let
+    mod stuff file stuff
     mod console = builtIn.js.effect.console
 in
-    val jsMain = console.log "Hello world!"
+    val jsMain = stuff.main
