@@ -44,7 +44,7 @@ impl Value {
     }
 
     pub fn to_syntax(self) -> Syntax {
-        self.0.into_iter().rev().fold(
+        self.0.into_iter().fold(
             Default::default(),
             |input, (id, item)| {
                 vec![module::Item::LetIn(input, vec![module_where(id.to_ident(), item.to_syntax())])]

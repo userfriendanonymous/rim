@@ -51,3 +51,25 @@ x = forall a . Maybe a
 forall a . x
 
 forall a .
+
+
+
+a ->
+    b ->
+        a + b + 2
+
+n -> (n -> n)
+
+{ a = n }
+forall . n -> (forall . n -> n)
+
+
+type
+    | unknown name
+    | bound name
+    | cons
+        [polyType]
+
+polyType
+    [names] type
+

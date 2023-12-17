@@ -7,7 +7,10 @@ impl super::Value {
     pub fn package_meta(&self, path: package::Path) -> impl HttpFut<Result<package::Meta, PackageMetaError>> {
         let f = self.client.get(format!("{URL}/store/package_meta/{path}")).send();
         async move {
-            f.await?.json().await
+            let res = f.await?;
+            let text = res.text().await?;
+            println!("package_meta response: {}", &text);
+            Ok(serde_json::from_str(&text).unwrap())
         }
     }
 

@@ -49,12 +49,16 @@ impl Pointer {
             dependencies,
             syntax
         };
+
+        File::create("packages_map").await.unwrap().write_all(format!("{:#?}", &packages_map).as_bytes()).await.unwrap();
         
         let packages_syntax = packages_map.to_syntax();
         let syntax = vec![module::Item::LetIn(
             packages_syntax,
             map_item.to_syntax()
         )];
+
+        File::create("syntax").await.unwrap().write_all(format!("{:#?}", &syntax).as_bytes()).await.unwrap();
 
         let mut globe = resolution::Globe::new();
         let env = resolution::value(&syntax, resolution::Env::default(), &mut globe).map_err(E::Resolution)?;

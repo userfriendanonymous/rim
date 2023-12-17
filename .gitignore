@@ -4,3 +4,5 @@ library_server/target/
 library_server/Cargo.lock
 library_server/store/
 target/
+exampleProject/
+test123/

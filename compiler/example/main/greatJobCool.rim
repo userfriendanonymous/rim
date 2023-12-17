@@ -1,2 +1,0 @@
-
-val fire = builtIn.js.effect.console.log "Hello!"
