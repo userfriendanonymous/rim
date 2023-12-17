@@ -1,0 +1,9 @@
+
+{
+    "dependencies": {
+        "builtIn": { "BuiltIn": null }
+    },
+    "targets": {
+        "js": ["jsMain"]
+    }
+}

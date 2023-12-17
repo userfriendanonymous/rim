@@ -1,0 +1,15 @@
+
+let
+    from builtIn
+        val eq = number.eq
+        from js.effect
+            mod console = console
+            val chainEff = chain
+    val rec = (\f = f f) (\self f = f $ self self f)
+in let
+    val factorial = rec \self n = 
+        if n <eq> 0 then 1 else n * self (n - 1)
+in
+    val jsMain =
+        console.log "Factorial of 10 is: "
+        <chainEff> console.log (factorial 10)
