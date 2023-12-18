@@ -169,4 +169,24 @@ Just like in Haskell: `if .. then .. else ..`
 val x = if true then 1 + 2 else 0
 ```
 
+## Configuration file
+Config file for a Rim project is in a `.json` format, to be changed later.
+
+Default `config.json` file:
+```json
+{
+    "dependencies": {
+        "builtIn": { "BuiltIn": null }
+    },
+    "targets": {
+        "js": {
+            "main": ["jsMain", "Lazy"]
+        }
+    }
+}
+```
+
+## Rim Community Package Registry
+This is being worked on. (WIP)
+
 [(Work in Progress) Book.](https://rim-book.vercel.app)
