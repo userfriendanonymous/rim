@@ -18,6 +18,9 @@ Installs as `rim`.
 - `rim build` - Compile a project into `output/` directory.
 - `rim run-js <name>` - Compile and run a JS target with `<name>` with `node` command (Node.js).
 
+## Examples
+See code examples at [`examples/`](examples/).
+
 ## How is this language unique?
 
 ### Extensive use of modules
