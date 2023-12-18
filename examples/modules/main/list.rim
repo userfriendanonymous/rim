@@ -1,0 +1,15 @@
+# Linked list #
+
+let
+    mod cons file cons # could be written in this file too #
+    sum match
+        nil cons
+in let val
+    nil = nil unit
+    cons head tail = cons $ cons.new head tail
+    match nil cons = match (\v = nil) (\v = cons > cons.head v > cons.tail v)
+in val
+    match = match
+    nil = nil
+    cons = cons
+    head = match maybe.nothing (\head tail = maybe.just head)

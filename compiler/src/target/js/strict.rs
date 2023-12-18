@@ -76,7 +76,22 @@ pub fn val_out(value: &val::Out, globe: &Globe) -> String {
                     "({inputs}$sum => {{ {branches}{{ throw new Error('Sum type mismatch: $sum[0] is not in range of possible branches!') }} }})"
                 )
             },
-        }
+        },
+        val::Out::Enum(v) => match v {
+            val::out::Enum::Init(field_id, _) => {
+                format!("{}", field_id)
+            },
+            val::out::Enum::Match(type_id) => {
+                let len = globe.sum_type(type_id);
+                let inputs = (0..*len).map(|id| format!("${id} => ")).collect::<String>();
+                let branches = (0..*len).map(|id| format!(
+                    "if ($enum == {id}) {{ return ${id} }} else "
+                )).collect::<String>();
+                format!(
+                    "({inputs}$enum => {{ {branches}{{ throw new Error('Enum type mismatch: $enum is not in range of possible branches!') }} }})"
+                )
+            },
+        },
         val::Out::Product(v) => match v {
             val::out::Product::Field(field_id, _) => format!(
                 "($value => $value[{field_id}])"
@@ -129,11 +144,13 @@ pub fn val_out(value: &val::Out, globe: &Globe) -> String {
         },
         val::Out::Js(v) => match v {
             val::out::Js::Effect(v) => match v {
-                val::out::js::Effect::Console(v) => match v {
-                    val::out::js::effect::Console::Log => format!("($ => () => console.log($))")
-                },
                 val::out::js::Effect::Chain => format!("($1 => $2 => () => {{ $1(); $2() }})")
-            }
+            },
+            val::out::Js::Console(v) => match v {
+                val::out::js::Console::Log => format!("($ => () => console.log($))")
+            },
+            val::out::Js::SetTimeout => format!("($time => $f => () => {{ setTimeout($f, $time) }})"),
+            val::out::Js::Alert => format!("($i => () => {{ alert($i) }})")
         }
     }
 }

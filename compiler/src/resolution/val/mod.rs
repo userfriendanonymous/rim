@@ -1,4 +1,4 @@
-use crate::syntax::{Ident, self};
+use crate::syntax;
 use super::{Globe, Env, module};
 pub use out::Value as Out;
 
@@ -13,7 +13,7 @@ pub enum Value {
 
 #[derive(Clone, Debug)]
 pub enum Error {
-    PathNotFound(Vec<Ident>, Option<usize>),
+    PathNotFound(syntax::Path, Option<usize>),
     LetInInput(Box<module::Error>)
 }
 
@@ -22,7 +22,7 @@ pub fn out<'a>(input: &'a syntax::Val, env: Env, globe: &mut Globe) -> Result<Ou
 
     Ok(match input {
         syntax::Val::Ref(path) => {
-            Out::Ref(*env.val_id_by_path(path, &globe).map_err(|e| E::PathNotFound(path.items.clone(), e))?)
+            Out::Ref(*env.val_id_by_path(path, &globe).map_err(|e| E::PathNotFound(path.clone(), e))?)
         }
         syntax::Val::Apply(f, input) => {
             let f = out(f.as_ref(), env.clone(), globe)?;

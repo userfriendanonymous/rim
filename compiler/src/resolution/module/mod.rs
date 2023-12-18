@@ -92,7 +92,15 @@ pub fn r#where<'a>(input: &'a [syntax::module::Item], env: Where, globe: &mut Gl
             },
 
             syntax::module::Item::Enum(name, fields) => {
-                todo!()
+                let id = globe.new_type(Type::Enum(fields.len()));
+                {
+                    let id = globe.new_val(Val::Out(val::Out::Enum(val::out::Enum::Match(id))));
+                    value.merge_val(name.clone(), id).map_err(|id| E::ValNameTaken(name.clone(), id))?;
+                }
+                for (idx, field) in fields.into_iter().enumerate() {
+                    let field_id = globe.new_val(Val::Out(val::Out::Enum(val::out::Enum::Init(idx, id))));
+                    value.merge_val(field.clone(), field_id).map_err(|id| E::ValNameTaken(field.clone(), id))?;
+                }
             },
 
             syntax::module::Item::Target(r#type, name, path) => {

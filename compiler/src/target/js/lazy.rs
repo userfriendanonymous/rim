@@ -116,6 +116,27 @@ pub fn val_out(value: &val::Out, globe: &Globe) -> String {
                 )
             }
         },
+        val::Out::Enum(v) => match v {
+            val::out::Enum::Init(field_id, _) => format!("{field_id}"),
+            val::out::Enum::Match(type_id) => {
+                let len = globe.enum_type(type_id);
+    
+                let output = (0..*len).rev().fold(
+                    format!("{{ throw new Error('Enum type mismatch: $value is not in range of possible branches!') }}"),
+                    |prev, id| format!(
+                        "if ($value == {id}) {{ return {} }} else {prev}",
+                        unwrap_val_out(format!("${id}"))
+                    )
+                );
+                (0..*len).rev().fold(
+                    function("$enum", format!(
+                        "{{ let $value = {}; {output} }}",
+                        unwrap_val_out("$enum")
+                    )),
+                    |output, input_idx| format!("(${input_idx} => {})", wrap_val_out(output))
+                )
+            }
+        },
         val::Out::Product(v) => match v {
             val::out::Product::Init(type_id) => {
                 let len = globe.product_type(type_id);
@@ -171,17 +192,26 @@ pub fn val_out(value: &val::Out, globe: &Globe) -> String {
         }
         val::Out::Js(v) => match v {
             val::out::Js::Effect(v) => match v {
-                val::out::js::Effect::Console(v) => match v {
-                    val::out::js::effect::Console::Log => {
-                        format!("($ => {})", wrap_val_out(format!("() => console.log({})", unwrap_val_out("$"))))
-                    }
-                },
                 val::out::js::Effect::Chain => function("$1", function("$2", format!(
                     "() => {{ {}(); {}() }}",
                     unwrap_val_out("$1"),
                     unwrap_val_out("$2"),
                 )))
             },
+            val::out::Js::Console(v) => match v {
+                val::out::js::Console::Log => {
+                    format!("($ => {})", wrap_val_out(format!("() => console.log({})", unwrap_val_out("$"))))
+                }
+            },
+            val::out::Js::SetTimeout => nested_function_const(|[time, f]| format!(
+                "() => {{ setTimeout({}, {}) }}",
+                unwrap_val_out(f),
+                unwrap_val_out(time),
+            )),
+            val::out::Js::Alert => nested_function_const(|[input]| format!(
+                "() => {{ alert({}) }}",
+                unwrap_val_out(input),
+            ))
         }
     }
 }

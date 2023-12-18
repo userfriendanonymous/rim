@@ -1,0 +1,12 @@
+let enum match
+    false true
+in let val
+    not = match true false
+in val
+    match = match
+    false = false
+    true = true
+    not = not
+    eq x = match > not x > x
+    and = match false
+    or x = match x true

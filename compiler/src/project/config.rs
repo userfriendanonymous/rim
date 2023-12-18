@@ -1,6 +1,8 @@
 use std::collections::BTreeMap;
 
 use serde::{Serialize, Deserialize};
+use crate::{syntax, target};
+
 use super::Dependency;
 use shared::Ident;
 
@@ -12,5 +14,5 @@ pub struct Value {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Targets {
-    pub js: Vec<Ident>,
+    pub js: BTreeMap<Ident, (syntax::Path, target::js::Type)>,
 }

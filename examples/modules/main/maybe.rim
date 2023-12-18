@@ -1,0 +1,15 @@
+# Optional value #
+
+let
+    let sum match
+        nothing just
+    in val
+        match nothing = match (\v = nothing)
+        nothing = nothing unit
+        just = just
+in val
+    match = match
+    nothing = nothing
+    just = just
+    unwrapOr else = match else identity
+    map f = match nothing (\v = just $ f v)

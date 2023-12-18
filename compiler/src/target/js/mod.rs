@@ -1,8 +1,9 @@
 use crate::resolution::{Env, Globe, globe::ValId};
-
+use serde::{Serialize, Deserialize};
 pub mod strict;
 pub mod lazy;
 
+#[derive(Serialize, Deserialize, Clone, Debug, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Type {
     Lazy,
     Strict,

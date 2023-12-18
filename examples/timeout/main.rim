@@ -1,0 +1,12 @@
+
+let
+    from builtIn
+        from js
+            val setTimeout = setTimeout
+            val log = console.log
+            from effect val chainEff = chain
+in
+    val jsMain =
+        log "Starting a timer..."
+        <chainEff> (setTimeout 2000 $ log "Time is out!"
+        <chainEff> log "Bye!")

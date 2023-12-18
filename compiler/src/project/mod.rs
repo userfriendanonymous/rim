@@ -50,7 +50,7 @@ impl Pointer {
             syntax
         };
 
-        File::create("packages_map").await.unwrap().write_all(format!("{:#?}", &packages_map).as_bytes()).await.unwrap();
+        // File::create("packages_map").await.unwrap().write_all(format!("{:#?}", &packages_map).as_bytes()).await.unwrap();
         
         let packages_syntax = packages_map.to_syntax();
         let syntax = vec![module::Item::LetIn(
@@ -58,19 +58,20 @@ impl Pointer {
             map_item.to_syntax()
         )];
 
-        File::create("syntax").await.unwrap().write_all(format!("{:#?}", &syntax).as_bytes()).await.unwrap();
+        // File::create("syntax").await.unwrap().write_all(format!("{:#?}", &syntax).as_bytes()).await.unwrap();
 
         let mut globe = resolution::Globe::new();
         let env = resolution::value(&syntax, resolution::Env::default(), &mut globe).map_err(E::Resolution)?;
 
-        let dir = self.path.join("output").join("js");
-        tokio::fs::create_dir_all(dir.clone()).await.map_err(E::Io)?;
-
-        for name in config.targets.js {
-            let val_id = env.val_id(&name).ok_or(E::ValNotFound(name.clone()))?.clone();
-            let string = target::Type::Js.compile(&env, &mut globe, val_id);
-            let mut file = File::create(dir.join(format!("{name}.js"))).await.map_err(E::Io)?;
-            file.write_all(string.as_bytes()).await.map_err(E::Io)?;
+        {
+            let dir = self.path.join("output").join("js");
+            tokio::fs::create_dir_all(dir.clone()).await.map_err(E::Io)?;
+            for (name, (path, r#type)) in config.targets.js {
+                let val_id = env.val_id_by_path(&path, &globe).map_err(|_| E::ValNotFound(name.clone()))?.clone();
+                let string = target::Type::Js(r#type).compile(&env, &mut globe, val_id);
+                let mut file = File::create(dir.join(format!("{name}.js"))).await.map_err(E::Io)?;
+                file.write_all(string.as_bytes()).await.map_err(E::Io)?;
+            }
         }
 
         Ok(())

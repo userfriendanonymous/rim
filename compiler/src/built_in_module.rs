@@ -25,15 +25,18 @@ pub fn create() -> module::Value {
         .nest("js", {
             use val::{Js, js};
             Builder::new()
+                .with_val("setTimeout", Val::Js(Js::SetTimeout))
+                .with_val("alert", Val::Js(Js::Alert))
+                .nest("console", {
+                    use js::Console;
+                    Builder::new()
+                        .with_val("log", Val::Js(Js::Console(Console::Log)))
+                })
                 .nest("effect", {
                     use js::{Effect, effect};
                     Builder::new()
                         .with_val("chain", Val::Js(Js::Effect(Effect::Chain)))
-                        .nest("console", {
-                            use effect::Console;
-                            Builder::new()
-                                .with_val("log", Val::Js(Js::Effect(Effect::Console(Console::Log))))
-                        })
+                        
                 })
         })
         .into()
