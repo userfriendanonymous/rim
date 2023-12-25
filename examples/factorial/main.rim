@@ -1,16 +1,17 @@
 
-let
-    val rec = (\f = f f) (\self f = f $ self self f)
-    # Imports from built-in module #
-    from builtIn
-        val eq = number.eq
-        from js
-            val chainEff = effect.chain
-            mod console = console
-in let
-    val factorial = rec \self n = 
-        if n <eq> 0 then 1 else n * self (n - 1)
+let mod
+    console = builtIn.js.console
+    node = builtIn.js.node
+    js = builtIn.js
+    interval = builtIn.js.interval
+    timeout = builtIn.js.timeout
 in
-    val jsMain =
-        console.log "Factorial of 10 is: "
-        <chainEff> console.log (factorial 10)
+    val nodeMain = node.fromSuper $
+        (interval.set 500 $ console.log "Hello everyone!")
+        <js.bind> (\id =
+            console.log id
+            <js.bind> (\n = timeout.set 6000 $
+                console.log "That's all!"
+                <js.bind> (\n = interval.clear id)
+            )
+        )

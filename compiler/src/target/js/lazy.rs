@@ -1,6 +1,8 @@
 use std::fmt::Display;
-
 use crate::resolution::{Env, Globe, val, Id, Module, module, globe::ValId};
+
+mod browser;
+mod node;
 
 pub fn value(env: &Env, globe: &Globe, val_id: ValId) -> String {
     let utils = format!(
@@ -10,7 +12,7 @@ pub fn value(env: &Env, globe: &Globe, val_id: ValId) -> String {
 
     let main = format!(
         "{}()",
-        unwrap_val_out(id(&val_id.unwrap()))
+        unwrap_val(id(&val_id.unwrap()))
     );
 
     format!(
@@ -26,7 +28,7 @@ pub fn module_where(value: &module::r#where::Structure, globe: &Globe) -> String
         |(_, id)| format!(
             "let {} = {}\n",
             self::id(&id.unwrap()),
-            wrap_val_out(val_out(globe.val_out(id), globe))
+            wrap_val(val_out(globe.val_out(id), globe))
         )
     ).collect::<String>();
 
@@ -59,86 +61,82 @@ pub fn id(value: &Id) -> String {
     format!("v{}", value.unwrap().to_string())
 }
 
-pub fn unwrap_val_out<W: Display>(wrapped: W) -> String {
+pub fn unwrap_val<W: Display>(wrapped: W) -> String {
     format!("$unwrap({wrapped})")
 }
 
-pub fn wrap_val_out<U: Display>(unwrapped: U) -> String {
+pub fn wrap_val<U: Display>(unwrapped: U) -> String {
     format!("[() => {unwrapped}]")
 }
 
 pub fn function<I: Display, O: Display>(input: I, output: O) -> String {
-    format!("({input} => {})", wrap_val_out(output))
+    format!("({input} => {})", wrap_val(output))
 }
 
-pub fn binary_function(f: impl FnOnce(String, String) -> String) -> String {
-    function("$l", function("$r", f(unwrap_val_out("$l"), unwrap_val_out("$r"))))
+pub fn eff<O: Display>(output: O) -> String {
+    format!("() => {{ let $o = {}; return {} }}", output, wrap_val("$o"))
 }
 
-pub fn nested_function(inputs: usize, body: impl FnOnce(std::vec::IntoIter<String>) -> String) -> String {
-    let iter = (0..inputs).map(|idx| unwrap_val_out(format!("${idx}"))).collect::<Vec<_>>().into_iter();
-    (0..inputs).fold(body(iter), |output, input_idx| function(format!("${input_idx}"), output))
-}
-
-pub fn nested_function_const<const INPUTS: usize>(body: impl FnOnce([String; INPUTS]) -> String) -> String {
-    let body = body(std::array::from_fn(|idx| unwrap_val_out(format!("${idx}"))));
-    (0..INPUTS).rev().fold(body, |output, input_idx| function(format!("${input_idx}"), output))
+pub fn curried_function<const INPUTS: usize>(body: impl FnOnce([String; INPUTS]) -> String) -> String {
+    let body = body(std::array::from_fn(|idx| unwrap_val(format!("${idx}"))));
+    (0..INPUTS).rev().fold(body, |output, input_idx| format!("(${input_idx} => {})", wrap_val(output)))
 }
 
 pub fn val_out(value: &val::Out, globe: &Globe) -> String {
+    use val::{Out, out};
     match value {
-        val::Out::Apply(f, input) => unwrap_val_out(format!("{}({})", val_out(f, globe), wrap_val_out(val_out(&input, globe)))),
-        val::Out::Function(input, output) => format!("({} => {})", id(&input.unwrap()), wrap_val_out(val_out(&output, globe))),
-        val::Out::Ref(v) => unwrap_val_out(id(&v.unwrap())),
-        val::Out::LetIn(input, output) => format!("
+        Out::Apply(f, input) => unwrap_val(format!("{}({})", val_out(f, globe), wrap_val(val_out(&input, globe)))),
+        Out::Function(input, output) => format!("({} => {})", id(&input.unwrap()), wrap_val(val_out(&output, globe))),
+        Out::Ref(v) => unwrap_val(id(&v.unwrap())),
+        Out::LetIn(input, output) => format!("
             (() => {{ {}return ({}) }})()",
             self::module_where(input.structure(), globe),
             val_out(output, globe)
         ),
-        val::Out::Sum(v) => match v {
-            val::out::Sum::Init(field_id, _) => format!("($ => {})", wrap_val_out(format!("[{field_id}, $]"))),
-            val::out::Sum::Match(type_id) => {
+        Out::Sum(v) => match v {
+            out::Sum::Init(field_id, _) => format!("($ => {})", wrap_val(format!("[{field_id}, $]"))),
+            out::Sum::Match(type_id) => {
                 let len = globe.sum_type(type_id);
     
                 let output = (0..*len).rev().fold(
                     format!("{{ throw new Error('Sum type mismatch: $value[0] is not in range of possible branches!') }}"),
                     |prev, id| format!(
                         "if ($value[0] == {id}) {{ return {} }} else {prev}",
-                        unwrap_val_out(format!("{}($value[1])", unwrap_val_out(format!("${id}"))))
+                        unwrap_val(format!("{}($value[1])", unwrap_val(format!("${id}"))))
                     )
                 );
                 (0..*len).rev().fold(
                     function("$sum", format!(
                         "{{ let $value = {}; {output} }}",
-                        unwrap_val_out("$sum")
+                        unwrap_val("$sum")
                     )),
-                    |output, input_idx| format!("(${input_idx} => {})", wrap_val_out(output))
+                    |output, input_idx| format!("(${input_idx} => {})", wrap_val(output))
                 )
             }
         },
-        val::Out::Enum(v) => match v {
-            val::out::Enum::Init(field_id, _) => format!("{field_id}"),
-            val::out::Enum::Match(type_id) => {
+        Out::Enum(v) => match v {
+            out::Enum::Init(field_id, _) => format!("{field_id}"),
+            out::Enum::Match(type_id) => {
                 let len = globe.enum_type(type_id);
     
                 let output = (0..*len).rev().fold(
                     format!("{{ throw new Error('Enum type mismatch: $value is not in range of possible branches!') }}"),
                     |prev, id| format!(
                         "if ($value == {id}) {{ return {} }} else {prev}",
-                        unwrap_val_out(format!("${id}"))
+                        unwrap_val(format!("${id}"))
                     )
                 );
                 (0..*len).rev().fold(
                     function("$enum", format!(
                         "{{ let $value = {}; {output} }}",
-                        unwrap_val_out("$enum")
+                        unwrap_val("$enum")
                     )),
-                    |output, input_idx| format!("(${input_idx} => {})", wrap_val_out(output))
+                    |output, input_idx| format!("(${input_idx} => {})", wrap_val(output))
                 )
             }
         },
-        val::Out::Product(v) => match v {
-            val::out::Product::Init(type_id) => {
+        Out::Product(v) => match v {
+            out::Product::Init(type_id) => {
                 let len = globe.product_type(type_id);
                 let fields = (0..*len).map(|id| format!(
                     "{}, ", format!("${id}")
@@ -146,17 +144,17 @@ pub fn val_out(value: &val::Out, globe: &Globe) -> String {
     
                 (0..*len).rev().fold(
                     format!("[{fields}]"),
-                    |output, input_idx| format!("(${input_idx} => {})", wrap_val_out(output))
+                    |output, input_idx| format!("(${input_idx} => {})", wrap_val(output))
                 )
             },
-            val::out::Product::Field(field_id, _) => {
-                function("$value", unwrap_val_out(format!(
-                    "{}[{field_id}]", unwrap_val_out("$value")
+            out::Product::Field(field_id, _) => {
+                function("$value", unwrap_val(format!(
+                    "{}[{field_id}]", unwrap_val("$value")
                 )))
             },
         }
-        val::Out::String(v) => match v {
-            val::out::String::Value(v) => {
+        Out::String(v) => match v {
+            out::String::Value(v) => {
                 let content = v.chars()
                     .map(|ch| {
                         match ch {
@@ -170,48 +168,43 @@ pub fn val_out(value: &val::Out, globe: &Globe) -> String {
                 format!(r#""{content}""#)
             },
         },
-        val::Out::Number(v) => match v {
-            val::out::Number::Value(v) => {
+        Out::Number(v) => match v {
+            out::Number::Value(v) => {
                 let items = v.items.iter().map(|item| item.to_str()).collect::<String>();
                 let last = v.last.to_str();
                 format!("{items}{last}")
             },
-            val::out::Number::Add => binary_function(|l, r| format!("{l} + {r}")),
-            val::out::Number::Sub => binary_function(|l, r| format!("{l} - {r}")),
-            val::out::Number::Mul => binary_function(|l, r| format!("{l} * {r}")),
-            val::out::Number::Div => binary_function(|l, r| format!("{l} / {r}")),
-            val::out::Number::Modulo => binary_function(|l, r| format!("{l} % {r}")),
-            val::out::Number::IsEqual => binary_function(|l, r| format!("{l} == {r}")),
-            val::out::Number::IsGreater => binary_function(|l, r| format!("{l} > {r}")),
+            out::Number::Add => curried_function(|[l, r]| format!("{l} + {r}")),
+            out::Number::Sub => curried_function(|[l, r]| format!("{l} - {r}")),
+            out::Number::Mul => curried_function(|[l, r]| format!("{l} * {r}")),
+            out::Number::Div => curried_function(|[l, r]| format!("{l} / {r}")),
+            out::Number::Modulo => curried_function(|[l, r]| format!("{l} % {r}")),
+            out::Number::IsEqual => curried_function(|[l, r]| format!("{l} == {r}")),
+            out::Number::IsGreater => curried_function(|[l, r]| format!("{l} > {r}")),
         },
-        val::Out::Boolean(v) => match v {
-            val::out::Boolean::Value(v) => if *v { format!("true") } else { format!("false") },
-            val::out::Boolean::And => binary_function(|l, r| format!("{l} && {r}")),
-            val::out::Boolean::Or => binary_function(|l, r| format!("{l} || {r}")),
-            val::out::Boolean::Match => nested_function_const(|[f, t, v]| format!("{v} ? {t} : {f}"))
+        Out::Boolean(v) => match v {
+            out::Boolean::Value(v) => if *v { format!("true") } else { format!("false") },
+            out::Boolean::And => curried_function(|[l, r]| format!("{l} && {r}")),
+            out::Boolean::Or => curried_function(|[l, r]| format!("{l} || {r}")),
+            out::Boolean::Match => curried_function(|[f, t, v]| format!("{v} ? {t} : {f}"))
         }
-        val::Out::Js(v) => match v {
-            val::out::Js::Effect(v) => match v {
-                val::out::js::Effect::Chain => function("$1", function("$2", format!(
-                    "() => {{ {}(); {}() }}",
-                    unwrap_val_out("$1"),
-                    unwrap_val_out("$2"),
-                )))
+        Out::Js(v) => match v {
+            out::Js::Node(v) => node::val(v, globe),
+            out::Js::Browser(v) => browser::val(v, globe),
+            out::Js::Bind => curried_function(|[v, f]| format!("() => {{ let $o = {}(); return $o }}", unwrap_val(format!("{f}({v}())")))),
+            out::Js::Console(v) => match v {
+                out::js::Console::Log => curried_function(|[i]| eff(format!("console.log({i})"))),
+                out::js::Console::Warn => curried_function(|[i]| eff(format!("console.warn({i})"))),
+                out::js::Console::Error => curried_function(|[i]| eff(format!("console.error({i})"))),
             },
-            val::out::Js::Console(v) => match v {
-                val::out::js::Console::Log => {
-                    format!("($ => {})", wrap_val_out(format!("() => console.log({})", unwrap_val_out("$"))))
-                }
+            out::Js::Timeout(v) => match v {
+                out::js::Timeout::Set => curried_function(|[time, f]| eff(format!("setTimeout({f}, {time})"))),
+                out::js::Timeout::Clear => curried_function(|[id]| eff(format!("clearTimeout({id})"))),
             },
-            val::out::Js::SetTimeout => nested_function_const(|[time, f]| format!(
-                "() => {{ setTimeout({}, {}) }}",
-                unwrap_val_out(f),
-                unwrap_val_out(time),
-            )),
-            val::out::Js::Alert => nested_function_const(|[input]| format!(
-                "() => {{ alert({}) }}",
-                unwrap_val_out(input),
-            ))
+            out::Js::Interval(v) => match v {
+                out::js::Interval::Set => curried_function(|[time, f]| eff(format!("setInterval({f}, {time})"))),
+                out::js::Interval::Clear => curried_function(|[id]| eff(format!("clearInterval({id})"))),
+            }
         }
     }
 }

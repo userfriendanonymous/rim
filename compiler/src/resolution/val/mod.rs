@@ -1,8 +1,18 @@
+use std::array;
+
 use crate::syntax;
-use super::{Globe, Env, module};
+use super::{Globe, Env, module, globe::ValId};
 pub use out::Value as Out;
 
 pub mod out;
+
+fn curried_function<const LEN: usize>(globe: &mut Globe, f: impl FnOnce([ValId; LEN]) -> Out) -> Out {
+    let ids = array::from_fn(|_| globe.new_val(Value::In));
+    let body = f(ids.clone());
+    ids.into_iter().rev().fold(body, |body, id| {
+        Out::Function(id, Box::new(body))
+    })
+}
 
 #[derive(Clone, Debug)]
 pub enum Value {
@@ -44,14 +54,10 @@ pub fn out<'a>(input: &'a syntax::Val, env: Env, globe: &mut Globe) -> Result<Ou
             let cond = self::out(&cond, env.clone(), globe)?;
             let then = self::out(&then, env.clone(), globe)?;
             let otherwise = self::out(&otherwise, env, globe)?;
-            Out::Apply(
-                Box::new(Out::Apply(Box::new(
-                    Out::Apply(Box::new(Out::Boolean(out::Boolean::Match)), Box::new(otherwise))),
-                    Box::new(then)
-                )),
-                Box::new(cond),
+            Out::apply(
+                Out::apply(Out::apply(Out::Boolean(out::Boolean::Match), otherwise), then),
+                cond,
             )
-            
         },
         syntax::Val::String(v) => Out::String(v.clone()),
         syntax::Val::Number(v) => Out::Number(v.clone()),
@@ -67,27 +73,24 @@ pub fn out<'a>(input: &'a syntax::Val, env: Env, globe: &mut Globe) -> Result<Ou
             syntax::val::InfixOp::And => Out::Boolean(out::Boolean::And),
             syntax::val::InfixOp::Or => Out::Boolean(out::Boolean::Or),
 
-            syntax::val::InfixOp::ApplyLeft => {
-                let input_id = globe.new_val(Value::In);
-                Out::Function(input_id, Box::new({
-                    let f_id = globe.new_val(Value::In);
-                    Out::Function(f_id, Box::new(Out::Apply(Box::new(Out::Ref(f_id)), Box::new(Out::Ref(input_id)))))
-                }))
-            },
-            syntax::val::InfixOp::ApplyRight => {
-                let f_id = globe.new_val(Value::In);
-                Out::Function(f_id, Box::new({
-                    let input_id = globe.new_val(Value::In);
-                    Out::Function(input_id, Box::new(Out::Apply(Box::new(Out::Ref(f_id)), Box::new(Out::Ref(input_id)))))
-                }))
-            },
-            syntax::val::InfixOp::Apply => {
-                let f_id = globe.new_val(Value::In);
-                Out::Function(f_id, Box::new({
-                    let input_id = globe.new_val(Value::In);
-                    Out::Function(input_id, Box::new(Out::Apply(Box::new(Out::Ref(f_id)), Box::new(Out::Ref(input_id)))))
-                }))
-            },
+            syntax::val::InfixOp::ApplyLeft => curried_function(globe, |[i, f]| {
+                Out::apply(Out::Ref(f), Out::Ref(i))
+            }),
+            syntax::val::InfixOp::ApplyRight => curried_function(globe, |[f, i]| {
+                Out::apply(Out::Ref(f), Out::Ref(i))
+            }),
+            syntax::val::InfixOp::Apply => curried_function(globe, |[f, i]| {
+                Out::apply(Out::Ref(f), Out::Ref(i))
+            }),
+            syntax::val::InfixOp::ComposeLeft => curried_function(globe, |[i, f, x]| {
+                Out::apply(Out::Ref(f), Out::apply(Out::Ref(i), Out::Ref(x)))
+            }),
+            syntax::val::InfixOp::ComposeRight => curried_function(globe, |[f, i, x]| {
+                Out::apply(Out::Ref(f), Out::apply(Out::Ref(i), Out::Ref(x)))
+            }),
+            syntax::val::InfixOp::Compose => curried_function(globe, |[f, i, x]| {
+                Out::apply(Out::Ref(f), Out::apply(Out::Ref(i), Out::Ref(x)))
+            }),
         },
         syntax::Val::InfixApply(f, left, right) => {
             let f = out(f, env.clone(), globe)?;

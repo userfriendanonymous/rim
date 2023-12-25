@@ -38,6 +38,9 @@ pub enum InfixOp {
     ApplyLeft, // i < f
     ApplyRight, // f > i
     Apply, // f $ i
+    ComposeLeft, // i << f
+    ComposeRight, // f >> i
+    Compose, // f $$ i
     // Boolean
     And,
     Or,

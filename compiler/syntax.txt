@@ -6,8 +6,28 @@ convert any :: String
 
 any = (\f = f f) (\f = f f)
 
+idk x = x + 1
++ :: Fn Num (Fn Num Num)
+{ [x] = Num }
+idk x :: Fn Num Num
+
+Wrap (Fn N N)
+Wrap (Fn S N)
+Wrap (forall a . Fn a N)
+forall a . Fn a N
 
 
+cool x = x 10 + x "Hi!"
+{ [x] = Fn Num xO
+, [xO] = ? }
+
+{ [x] = Fn String x1
+, [x1] = ? }
++ x0 x1
+{ [x0] = Num
+, [x1] = Num }
+
+{ [x] = forall a . Fn a  }
 
 FLOW Finds bounds for (read <- write)
 forall   . S -> N
@@ -22,12 +42,49 @@ forall   . S -> N
 
 forall a . a -> N { Bounds }
 
+a b c -> Fn a b
+a -> Fn S a
+{ a = S, b = N }
+
+log :: a -> Fn a String
+main = log 10
+a -> Fn a String
+ -> Number
+{ a = Number }
+ -> Fn Number String
+ -> String
+
+Fn ( -> a) ( -> String)
+Fn ( -> String) ( -> a)
+{ a = String }
+{ a = String }
+a -> Fn ( -> String) ( -> String)
+{ a = String }
+ -> Fn ( -> Number) ( -> String)
+ -> Fn ( -> String) ( -> String)
+
+ -> Fn ( -> Some) ( -> String)
+ -> Fn (a -> a) ( -> String)
+ a Some
 
 MERGE
 a -> N
 S -> N
 forall x . x -> N
-
+x -> Fn x
+y -> Fn y
+[x, y] = None
+forall a b c . Fn a b c
+a -> Fn String a
+b -> b
+{ }
+a -> b -> c -> Fn (a -> a -> a)
+b -> Fn (a -> b) b
+b -> b
+{ a = Fn (a -> a) b }
+Fn (b -> b) String
+Cons(Cons),
+Application(F, I),
 
 MERGE_BOUNDS
 { Bounds a = b = c -> Number }

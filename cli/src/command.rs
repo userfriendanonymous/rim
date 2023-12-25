@@ -13,17 +13,23 @@ const CONFIG: &'static str = r#"
     },
     "targets": {
         "js": {
-            "main": ["jsMain", "Lazy"]
+            "node": {
+                "main": ["nodeMain", "Lazy"]
+            },
+            "browser": {
+                
+            }
         }
     }
 }
 "#;
 
 const MAIN_MODULE: &'static str = r#"
-let
-    mod console = builtIn.js.console
+let mod
+    console = builtIn.js.console
+    node = builtIn.js.node
 in
-    val jsMain = console.log "Hello world!"
+    val nodeMain = node.fromSuper $ console.log "Hello world!"
 "#;
 
 #[derive(Parser, Debug)]
@@ -77,7 +83,7 @@ impl Value {
                 } else {
                     println!("{}", "Success! Running:".green());
                     if let Err(error) = Command::new("node")
-                        .arg(format!("./output/js/{name}.js"))
+                        .arg(format!("./output/js/node/{name}.js"))
                         .spawn()
                         .unwrap()
                         .wait()

@@ -5,7 +5,12 @@
     },
     "targets": {
         "js": {
-            "main": ["jsMain", "Lazy"]
+            "node": {
+                "main": ["nodeMain", "Lazy"]
+            },
+            "browser": {
+                
+            }
         }
     }
 }

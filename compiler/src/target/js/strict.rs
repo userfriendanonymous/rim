@@ -1,5 +1,8 @@
 use crate::resolution::{Env, Globe, val, Id, Module, module, globe::ValId};
 
+mod node;
+mod browser;
+
 pub fn value(env: &Env, globe: &Globe, val_id: ValId) -> String {
     let main = format!(
         "{}()",
@@ -53,20 +56,21 @@ pub fn id(value: &Id) -> String {
 }
 
 pub fn val_out(value: &val::Out, globe: &Globe) -> String {
+    use val::{Out, out};
     match value {
-        val::Out::Apply(f, input) => format!("{}({})", val_out(&f, globe), val_out(&input, globe)),
-        val::Out::Function(input, output) => format!("({} => {})", id(&input.unwrap()), val_out(&output, globe)),
-        val::Out::Ref(value) => id(&value.unwrap()),
-        val::Out::LetIn(input, output) => format!("
+        Out::Apply(f, input) => format!("{}({})", val_out(&f, globe), val_out(&input, globe)),
+        Out::Function(input, output) => format!("({} => {})", id(&input.unwrap()), val_out(&output, globe)),
+        Out::Ref(value) => id(&value.unwrap()),
+        Out::LetIn(input, output) => format!("
             (() => {{ {}; return {} }})()",
             self::module_where(input.structure(), globe),
             val_out(output, globe)
         ),
-        val::Out::Sum(v) => match v {
-            val::out::Sum::Init(field_id, _) => {
+        Out::Sum(v) => match v {
+            out::Sum::Init(field_id, _) => {
                 format!("$ => [{}, $]", field_id)
             },
-            val::out::Sum::Match(type_id) => {
+            out::Sum::Match(type_id) => {
                 let len = globe.sum_type(type_id);
                 let inputs = (0..*len).map(|id| format!("${id} => ")).collect::<String>();
                 let branches = (0..*len).map(|id| format!(
@@ -77,11 +81,11 @@ pub fn val_out(value: &val::Out, globe: &Globe) -> String {
                 )
             },
         },
-        val::Out::Enum(v) => match v {
-            val::out::Enum::Init(field_id, _) => {
+        Out::Enum(v) => match v {
+            out::Enum::Init(field_id, _) => {
                 format!("{}", field_id)
             },
-            val::out::Enum::Match(type_id) => {
+            out::Enum::Match(type_id) => {
                 let len = globe.sum_type(type_id);
                 let inputs = (0..*len).map(|id| format!("${id} => ")).collect::<String>();
                 let branches = (0..*len).map(|id| format!(
@@ -92,11 +96,11 @@ pub fn val_out(value: &val::Out, globe: &Globe) -> String {
                 )
             },
         },
-        val::Out::Product(v) => match v {
-            val::out::Product::Field(field_id, _) => format!(
+        Out::Product(v) => match v {
+            out::Product::Field(field_id, _) => format!(
                 "($value => $value[{field_id}])"
             ),
-            val::out::Product::Init(type_id) => {
+            out::Product::Init(type_id) => {
                 let len = globe.product_type(type_id);
                 let inputs = (0..*len).map(|id| format!("${id} => ")).collect::<String>();
                 let fields = (0..*len).map(|id| format!(
@@ -107,8 +111,8 @@ pub fn val_out(value: &val::Out, globe: &Globe) -> String {
                 )
             },
         },
-        val::Out::String(v) => match v {
-            val::out::String::Value(v) => {
+        Out::String(v) => match v {
+            out::String::Value(v) => {
                 let content = v.chars()
                     .map(|ch| {
                         match ch {
@@ -122,35 +126,43 @@ pub fn val_out(value: &val::Out, globe: &Globe) -> String {
                 format!(r#""{content}""#)
             },
         },
-        val::Out::Number(v) => match v {
-            val::out::Number::Value(v) => {
+        Out::Number(v) => match v {
+            out::Number::Value(v) => {
                 let items = v.items.iter().map(|item| item.to_str()).collect::<String>();
                 let last = v.last.to_str();
                 format!("{items}{last}")
             },
-            val::out::Number::Add => format!("($l => $r => $l + $r)"),
-            val::out::Number::Sub => format!("($l => $r => $l - $r)"),
-            val::out::Number::Mul => format!("($l => $r => $l * $r)"),
-            val::out::Number::Div => format!("($l => $r => $l / $r)"),
-            val::out::Number::Modulo => format!("($l => $r => $l % $r)"),
-            val::out::Number::IsEqual => format!("($l => $r => $l == $r)"),
-            val::out::Number::IsGreater => format!("($l => $r => $l > $r)"),
+            out::Number::Add => format!("($l => $r => $l + $r)"),
+            out::Number::Sub => format!("($l => $r => $l - $r)"),
+            out::Number::Mul => format!("($l => $r => $l * $r)"),
+            out::Number::Div => format!("($l => $r => $l / $r)"),
+            out::Number::Modulo => format!("($l => $r => $l % $r)"),
+            out::Number::IsEqual => format!("($l => $r => $l == $r)"),
+            out::Number::IsGreater => format!("($l => $r => $l > $r)"),
         },
-        val::Out::Boolean(v) => match v {
-            val::out::Boolean::Value(v) => if *v { "true" } else { "false" }.into(),
-            val::out::Boolean::And => "($l => $r => $l && $r)".into(),
-            val::out::Boolean::Or => "($l => $r => $l || $r)".into(),
-            val::out::Boolean::Match => "($f => $t => $v => $v ? $t : $f)".into()
+        Out::Boolean(v) => match v {
+            out::Boolean::Value(v) => if *v { "true" } else { "false" }.into(),
+            out::Boolean::And => "($l => $r => $l && $r)".into(),
+            out::Boolean::Or => "($l => $r => $l || $r)".into(),
+            out::Boolean::Match => "($f => $t => $v => $v ? $t : $f)".into()
         },
-        val::Out::Js(v) => match v {
-            val::out::Js::Effect(v) => match v {
-                val::out::js::Effect::Chain => format!("($1 => $2 => () => {{ $1(); $2() }})")
+        Out::Js(v) => match v {
+            out::Js::Node(v) => node::val(v, globe),
+            out::Js::Browser(v) => browser::val(v, globe),
+            out::Js::Bind => format!("($1 => $2 => () => $2($1())())"),
+            out::Js::Console(v) => match v {
+                out::js::Console::Log => format!("($ => () => console.log($))"),
+                out::js::Console::Warn => format!("($ => () => console.warn($))"),
+                out::js::Console::Error => format!("($ => () => console.error($))"),
             },
-            val::out::Js::Console(v) => match v {
-                val::out::js::Console::Log => format!("($ => () => console.log($))")
+            out::Js::Timeout(v) => match v {
+                out::js::Timeout::Set => format!("($time => $f => () => setTimeout($f, $time))"),
+                out::js::Timeout::Clear => format!("($id => () => clearTimeout($id))"),
             },
-            val::out::Js::SetTimeout => format!("($time => $f => () => {{ setTimeout($f, $time) }})"),
-            val::out::Js::Alert => format!("($i => () => {{ alert($i) }})")
+            out::Js::Interval(v) => match v {
+                out::js::Interval::Set => format!("($time => $f => () => setInterval($f, $time))"),
+                out::js::Interval::Clear => format!("($id => () => clearInterval($id))"),
+            }
         }
     }
 }

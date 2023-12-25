@@ -115,17 +115,25 @@ pub fn value(ind: IndentBound) -> impl Parser<char, Value, Error = Simple<char>>
             |v| Some(if v == infix!("<") { InfixOp::ApplyLeft } else if v == infix!(">") { InfixOp::ApplyRight } else { None? }),
             move |ind| infix_apply_left(
                 ind,
-                |v| Some(if v == infix!("&") { InfixOp::And } else if v == infix!("|") { InfixOp::Or } else { None? }),
-                move |ind| infix_apply_left(
+                |v| Some(if v == infix!("<<") { InfixOp::ComposeLeft } else if v == infix!(">>") { InfixOp::ComposeRight } else { None? }),
+                move |ind| infix_apply_right(
                     ind,
-                    |v| Some(if v == infix!("+") { InfixOp::Add } else if v == infix!("-") { InfixOp::Sub } else { None? }),
+                    |v| Some(if v == infix!("$$") { InfixOp::Compose } else { None? }),
                     move |ind| infix_apply_left(
                         ind,
-                        |v| Some(if v == infix!("*") { InfixOp::Mul } else if v == infix!("/") { InfixOp::Div } else { None? }),
+                        |v| Some(if v == infix!("&") { InfixOp::And } else if v == infix!("|") { InfixOp::Or } else { None? }),
                         move |ind| infix_apply_left(
                             ind,
-                            |v| Some(if v == infix!("%") { InfixOp::Modulo } else { None? }),
-                            apply
+                            |v| Some(if v == infix!("+") { InfixOp::Add } else if v == infix!("-") { InfixOp::Sub } else { None? }),
+                            move |ind| infix_apply_left(
+                                ind,
+                                |v| Some(if v == infix!("*") { InfixOp::Mul } else if v == infix!("/") { InfixOp::Div } else { None? }),
+                                move |ind| infix_apply_left(
+                                    ind,
+                                    |v| Some(if v == infix!("%") { InfixOp::Modulo } else { None? }),
+                                    apply
+                                ).boxed()
+                            ).boxed()
                         ).boxed()
                     ).boxed()
                 ).boxed()

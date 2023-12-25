@@ -23,3 +23,9 @@ pub enum Value {
     Number(Number),
     Js(Js)
 }
+
+impl Value {
+    pub fn apply(f: Value, i: Value) -> Self {
+        Self::Apply(Box::new(f), Box::new(i))
+    }
+}

@@ -12,7 +12,13 @@ pub struct Value {
     pub targets: Targets,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct Targets {
-    pub js: BTreeMap<Ident, (syntax::Path, target::js::Type)>,
+    pub js: JsTargets,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct JsTargets {
+    pub node: BTreeMap<Ident, (syntax::Path, target::js::Evaluation)>,
+    pub browser: BTreeMap<Ident, (syntax::Path, target::js::Evaluation)>,
 }

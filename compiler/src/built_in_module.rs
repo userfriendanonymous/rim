@@ -25,18 +25,36 @@ pub fn create() -> module::Value {
         .nest("js", {
             use val::{Js, js};
             Builder::new()
-                .with_val("setTimeout", Val::Js(Js::SetTimeout))
-                .with_val("alert", Val::Js(Js::Alert))
+                .with_val("bind", Val::Js(Js::Bind))
+                .nest("timeout", {
+                    use js::Timeout;
+                    Builder::new()
+                        .with_val("set", Val::Js(Js::Timeout(Timeout::Set)))
+                        .with_val("clear", Val::Js(Js::Timeout(Timeout::Clear)))
+                })
+                .nest("interval", {
+                    use js::Interval;
+                    Builder::new()
+                        .with_val("set", Val::Js(Js::Interval(Interval::Set)))
+                        .with_val("clear", Val::Js(Js::Interval(Interval::Clear)))
+                })
                 .nest("console", {
                     use js::Console;
                     Builder::new()
                         .with_val("log", Val::Js(Js::Console(Console::Log)))
+                        .with_val("warn", Val::Js(Js::Console(Console::Warn)))
+                        .with_val("error", Val::Js(Js::Console(Console::Error)))
                 })
-                .nest("effect", {
-                    use js::{Effect, effect};
+                .nest("node", {
+                    use js::Node;
                     Builder::new()
-                        .with_val("chain", Val::Js(Js::Effect(Effect::Chain)))
-                        
+                        .with_val("fromSuper", Val::Js(Js::Node(Node::FromSuper)))
+                })
+                .nest("browser", {
+                    use js::Browser;
+                    Builder::new()
+                        .with_val("fromSuper", Val::Js(Js::Browser(Browser::FromSuper)))
+                        .with_val("alert", Val::Js(Js::Browser(Browser::Alert)))
                 })
         })
         .into()

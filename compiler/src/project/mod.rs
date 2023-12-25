@@ -65,12 +65,27 @@ impl Pointer {
 
         {
             let dir = self.path.join("output").join("js");
-            tokio::fs::create_dir_all(dir.clone()).await.map_err(E::Io)?;
-            for (name, (path, r#type)) in config.targets.js {
-                let val_id = env.val_id_by_path(&path, &globe).map_err(|_| E::ValNotFound(name.clone()))?.clone();
-                let string = target::Type::Js(r#type).compile(&env, &mut globe, val_id);
-                let mut file = File::create(dir.join(format!("{name}.js"))).await.map_err(E::Io)?;
-                file.write_all(string.as_bytes()).await.map_err(E::Io)?;
+            {
+                let dir = dir.join("browser");
+                tokio::fs::create_dir_all(dir.clone()).await.map_err(E::Io)?;
+                for (name, (path, evaluation)) in config.targets.js.browser {
+                    let val_id = env.val_id_by_path(&path, &globe).map_err(|_| E::ValNotFound(name.clone()))?.clone();
+                    let string = target::js::Type { environment: target::js::Environment::Browser, evaluation }
+                        .compile(&env, &mut globe, val_id);
+                    let mut file = File::create(dir.join(format!("{name}.js"))).await.map_err(E::Io)?;
+                    file.write_all(string.as_bytes()).await.map_err(E::Io)?;
+                }
+            }
+            {
+                let dir = dir.join("node");
+                tokio::fs::create_dir_all(dir.clone()).await.map_err(E::Io)?;
+                for (name, (path, evaluation)) in config.targets.js.node {
+                    let val_id = env.val_id_by_path(&path, &globe).map_err(|_| E::ValNotFound(name.clone()))?.clone();
+                    let string = target::js::Type { environment: target::js::Environment::Browser, evaluation }
+                        .compile(&env, &mut globe, val_id);
+                    let mut file = File::create(dir.join(format!("{name}.js"))).await.map_err(E::Io)?;
+                    file.write_all(string.as_bytes()).await.map_err(E::Io)?;
+                }
             }
         }
 

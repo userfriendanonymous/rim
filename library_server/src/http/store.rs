@@ -32,3 +32,20 @@ pub async fn package_code(
         )
     }
 }
+
+// #[axum::debug_handler]
+// pub async fn add_package(
+//     extract::Path(path): extract::Path<package::Path>,
+//     extract::State(state): extract::State<State>
+// ) -> impl IntoResponse {
+//     match state.client_server.package_code(path).await {
+//         Ok(data) => (
+//             StatusCode::OK,
+//             data
+//         ),
+//         Err(_error) => (
+//             StatusCode::FORBIDDEN,
+//             Vec::new()
+//         )
+//     }
+// }
