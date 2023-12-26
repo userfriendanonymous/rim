@@ -9,7 +9,7 @@
                 "main": ["nodeMain", "Lazy"]
             },
             "browser": {
-                
+                "main": ["browserMain", "Lazy"]
             }
         }
     }

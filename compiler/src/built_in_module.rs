@@ -26,6 +26,8 @@ pub fn create() -> module::Value {
             use val::{Js, js};
             Builder::new()
                 .with_val("bind", Val::Js(Js::Bind))
+                .with_val("throw", Val::Js(Js::Throw))
+                .with_val("catch", Val::Js(Js::Catch))
                 .nest("timeout", {
                     use js::Timeout;
                     Builder::new()
@@ -55,6 +57,18 @@ pub fn create() -> module::Value {
                     Builder::new()
                         .with_val("fromSuper", Val::Js(Js::Browser(Browser::FromSuper)))
                         .with_val("alert", Val::Js(Js::Browser(Browser::Alert)))
+                })
+                .nest("value", {
+                    use js::value::Value;
+                    Builder::new()
+                        .with_val("undefined", Val::Js(Js::Value(Value::Undefined)))
+                        .with_val("null", Val::Js(Js::Value(Value::Null)))
+                        .with_val("nan", Val::Js(Js::Value(Value::NaN)))
+                        .with_val("eq", Val::Js(Js::Value(Value::Eq)))
+                        .with_val("typeof", Val::Js(Js::Value(Value::Typeof)))
+                        .with_val("field", Val::Js(Js::Value(Value::Field)))
+                        .with_val("index", Val::Js(Js::Value(Value::Index)))
+                        .with_val("string", Val::Js(Js::Value(Value::String)))
                 })
         })
         .into()

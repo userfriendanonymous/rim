@@ -162,7 +162,8 @@ pub fn val_out(value: &val::Out, globe: &Globe) -> String {
             out::Js::Interval(v) => match v {
                 out::js::Interval::Set => format!("($time => $f => () => setInterval($f, $time))"),
                 out::js::Interval::Clear => format!("($id => () => clearInterval($id))"),
-            }
+            },
+            _ => todo!()
         }
     }
 }

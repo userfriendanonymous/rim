@@ -3,6 +3,7 @@ pub use browser::Value as Browser;
 
 pub mod node;
 pub mod browser;
+pub mod value;
 
 #[derive(Clone, Debug)]
 pub enum Value {
@@ -12,6 +13,9 @@ pub enum Value {
     Bind,
     Node(Node),
     Browser(Browser),
+    Value(value::Value),
+    Catch,
+    Throw,
 }
 
 #[derive(Clone, Debug)]

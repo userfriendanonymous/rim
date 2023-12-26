@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::fmt::{Display, format};
 use crate::resolution::{Env, Globe, val, Id, Module, module, globe::ValId};
 
 mod browser;
@@ -204,7 +204,26 @@ pub fn val_out(value: &val::Out, globe: &Globe) -> String {
             out::Js::Interval(v) => match v {
                 out::js::Interval::Set => curried_function(|[time, f]| eff(format!("setInterval({f}, {time})"))),
                 out::js::Interval::Clear => curried_function(|[id]| eff(format!("clearInterval({id})"))),
-            }
+            },
+            out::Js::Value(v) => match v {
+                out::js::value::Value::Undefined => eff("undefined"),
+                out::js::value::Value::Null => eff("null"),
+                out::js::value::Value::NaN => eff("NaN"),
+                out::js::value::Value::Eq => curried_function(|[l, r]| eff(format!("{l} == {r}"))),
+                out::js::value::Value::Field => curried_function(|[name, obj]| eff(format!("{obj}[{name}]"))),
+                out::js::value::Value::Index => curried_function(|[idx, obj]| eff(format!("{obj}[{idx}]"))),
+                out::js::value::Value::Typeof => curried_function(|[val]| eff(format!("typeof {val}"))),
+                out::js::value::Value::String => curried_function(|[v]| eff(format!("{v}")))
+            },
+            out::Js::Catch => curried_function(|[input, catch]| eff(format!(
+                "(() => {{ try {{ return {} }} catch($e) {{ return {} }} }})()",
+                unwrap_val(format!("{input}()")),
+                unwrap_val(format!(
+                    "{}()",
+                    unwrap_val(format!("{catch}({})", wrap_val("$e")))
+                ))
+            ))),
+            out::Js::Throw => curried_function(|[error]| eff(format!("(() => {{ throw {error} }})()")))
         }
     }
 }
