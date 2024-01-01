@@ -1,11 +1,12 @@
 use shared::library::store::{PackageMetaError, package, AddPackageError, PackageCodeError};
+use shared::PackageId;
 
 impl super::Value {
     pub async fn package_meta(&self, path: package::Path) -> Result<package::Meta, PackageMetaError> {
         self.store.read().await.package_meta(path).await.inspect_err(|e| println!("package_meta error: {e:?}")).map_err(Into::into)
     }
 
-    pub async fn add_package(&self, path: package::Path, meta: &package::Meta, code: &[u8]) -> Result<(), AddPackageError> {
+    pub async fn add_package(&self, path: package::Path, meta: &package::Meta, code: &[u8]) -> Result<PackageId, AddPackageError> {
         self.store.write().await.add_package(path, meta, code).await.map_err(Into::into)
     }
 

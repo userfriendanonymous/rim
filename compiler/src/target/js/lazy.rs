@@ -187,7 +187,11 @@ pub fn val_out(value: &val::Out, globe: &Globe) -> String {
             out::Boolean::And => curried_function(|[l, r]| format!("{l} && {r}")),
             out::Boolean::Or => curried_function(|[l, r]| format!("{l} || {r}")),
             out::Boolean::Match => curried_function(|[f, t, v]| format!("{v} ? {t} : {f}"))
-        }
+        },
+        Out::Array(v) => match v {
+            out::Array::Pair => curried_function(|[f, s]| format!("[{}, {}]", wrap_val(f), wrap_val(s))),
+            out::Array::Push => curried_function(|[el, arr]| format!("[...{arr}, {}]", wrap_val(el)))
+        },
         Out::Js(v) => match v {
             out::Js::Node(v) => node::val(v, globe),
             out::Js::Browser(v) => browser::val(v, globe),

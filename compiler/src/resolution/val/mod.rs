@@ -63,6 +63,7 @@ pub fn out<'a>(input: &'a syntax::Val, env: Env, globe: &mut Globe) -> Result<Ou
         syntax::Val::Number(v) => Out::Number(v.clone()),
         syntax::Val::Js(v) => Out::Js(v.clone()),
         syntax::Val::Boolean(v) => Out::Boolean(v.clone()),
+        syntax::Val::Array(v) => Out::Array(v.clone()),
         syntax::Val::InfixOp(op) => match op {
             syntax::val::InfixOp::Add => Out::Number(out::Number::Add),
             syntax::val::InfixOp::Sub => Out::Number(out::Number::Sub),
@@ -91,6 +92,10 @@ pub fn out<'a>(input: &'a syntax::Val, env: Env, globe: &mut Globe) -> Result<Ou
             syntax::val::InfixOp::Compose => curried_function(globe, |[f, i, x]| {
                 Out::apply(Out::Ref(f), Out::apply(Out::Ref(i), Out::Ref(x)))
             }),
+            syntax::val::InfixOp::Pair => Out::Array(out::Array::Pair),
+            syntax::val::InfixOp::Push => curried_function(globe, |[arr, el]|
+                Out::apply(Out::apply(Out::Array(out::Array::Push), Out::Ref(el)), Out::Ref(arr))
+            )
         },
         syntax::Val::InfixApply(f, left, right) => {
             let f = out(f, env.clone(), globe)?;

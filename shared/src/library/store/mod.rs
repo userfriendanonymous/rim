@@ -7,19 +7,3 @@ pub mod directory;
 pub mod package;
 pub mod path;
 pub mod dependency;
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub enum PackageMetaError {
-    Internal
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub enum PackageCodeError {
-    Internal
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub enum AddPackageError {
-    Internal,
-    PathExists
-}

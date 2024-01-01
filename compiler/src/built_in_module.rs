@@ -22,6 +22,12 @@ pub fn create() -> module::Value {
                 .with_val("and", Val::Boolean(Boolean::And))
                 .with_val("or", Val::Boolean(Boolean::Or))
         })
+        .nest("array", {
+            use val::Array;
+            Builder::new()
+                .with_val("pair", Val::Array(Array::Pair))
+                .with_val("push", Val::Array(Array::Push))
+        })
         .nest("js", {
             use val::{Js, js};
             Builder::new()

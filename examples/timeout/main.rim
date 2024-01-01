@@ -1,10 +1,9 @@
 
 let
-    from builtIn
-        from js
-            val setTimeout = setTimeout
-            val log = console.log
-            from effect val chainEff = chain
+    from builtIn.js
+        val setTimeout = setTimeout
+        val log = console.log
+        from effect val chainEff = chain
 in
     val jsMain =
         log "Starting a timer..."

@@ -16,3 +16,4 @@ zip = "0.6.6"
 tracing-subscriber = "0.3.16"
 tracing = "0.1.37"
 tower-http = { version = "0.5.0", features = ["trace"] }
+tempfile = "3.9.0"

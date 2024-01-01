@@ -48,8 +48,3 @@ impl<'de> Deserialize<'de> for Path {
     }
 }
 
-#[derive(Serialize, Deserialize, Default, Clone, Debug)]
-pub struct Meta {
-    packages: Vec<Ident>,
-    directories: Vec<Ident>,
-}

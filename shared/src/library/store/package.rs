@@ -4,6 +4,22 @@ use serde::{Serialize, Deserialize};
 use crate::{Ident, PackageId as Id};
 use super::Dependency;
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub enum MetaError {
+    Internal
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub enum CodeError {
+    Internal
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub enum AddError {
+    Internal,
+    PathExists
+}
+
 #[derive(Clone, Debug)]
 pub struct Path {
     path: super::Path,
@@ -50,6 +66,11 @@ impl<'de> Deserialize<'de> for Path {
             D: serde::Deserializer<'de> {
         String::deserialize(deserializer)?.parse().map_err(|_| serde::de::Error::custom("parsing failed"))
     }
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct AddMeta {
+    pub dependencies: BTreeMap<Ident, Dependency>
 }
 
 #[derive(Serialize, Deserialize)]

@@ -146,10 +146,16 @@ pub fn val_out(value: &val::Out, globe: &Globe) -> String {
             out::Boolean::Or => "($l => $r => $l || $r)".into(),
             out::Boolean::Match => "($f => $t => $v => $v ? $t : $f)".into()
         },
+        Out::Array(v) => match v {
+            out::Array::Pair => "(f => s => [f, s])".into(),
+            out::Array::Push => "(el => arr => [...arr, el])".into()
+        }
         Out::Js(v) => match v {
             out::Js::Node(v) => node::val(v, globe),
             out::Js::Browser(v) => browser::val(v, globe),
             out::Js::Bind => format!("($1 => $2 => () => $2($1())())"),
+            out::Js::Throw => "(obj => () => { throw obj })".into(),
+            out::Js::Catch => "(v => f => { try { return v() } catch(e) { return f(e)() } })".into(),
             out::Js::Console(v) => match v {
                 out::js::Console::Log => format!("($ => () => console.log($))"),
                 out::js::Console::Warn => format!("($ => () => console.warn($))"),
@@ -163,7 +169,16 @@ pub fn val_out(value: &val::Out, globe: &Globe) -> String {
                 out::js::Interval::Set => format!("($time => $f => () => setInterval($f, $time))"),
                 out::js::Interval::Clear => format!("($id => () => clearInterval($id))"),
             },
-            _ => todo!()
+            out::Js::Value(v) => match v {
+                out::js::value::Value::Undefined => "(() => undefined)".into(),
+                out::js::value::Value::Null => "(() => null)".into(),
+                out::js::value::Value::NaN => "(() => NaN)".into(),
+                out::js::value::Value::String => "(v => () => v)".into(),
+                out::js::value::Value::Field => "(name => obj => () => obj[name])".into(),
+                out::js::value::Value::Index => "(idx => obj => () => obj[idx])".into(),
+                out::js::value::Value::Eq => "(a => b => () => a == b)".into(),
+                out::js::value::Value::Typeof => "(v => () => typeof v)".into()
+            }
         }
     }
 }

@@ -6,7 +6,8 @@
     "targets": {
         "js": {
             "node": {
-                "main": ["nodeMain", "Lazy"]
+                "main": ["nodeMain", "Lazy"],
+                "mainStrict": ["nodeMain", "Strict"]
             },
             "browser": {
                 "main": ["browserMain", "Lazy"]

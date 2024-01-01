@@ -8,9 +8,9 @@ let from builtIn mod
         interval = interval
         timeout = timeout
 in let
-    val main = 
+    val main =
         js.catch
-            (js.value.string "Whoops! A fatal error!" <js.bind> js.throw)
+            (js.value.string "Fatal error!" <js.bind> js.throw)
             (\e = 
                 console.warn "Caught an error:"
                 <js.bind> (\n = console.error e)

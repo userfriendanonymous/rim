@@ -121,23 +121,31 @@ pub fn value(ind: IndentBound) -> impl Parser<char, Value, Error = Simple<char>>
                     |v| Some(if v == infix!("$$") { InfixOp::Compose } else { None? }),
                     move |ind| infix_apply_left(
                         ind,
-                        |v| Some(if v == infix!("&") { InfixOp::And } else if v == infix!("|") { InfixOp::Or } else { None? }),
+                        |v| Some(if v == infix!(":") { InfixOp::Push } else { None? }),
                         move |ind| infix_apply_left(
                             ind,
-                            |v| Some(if v == infix!("+") { InfixOp::Add } else if v == infix!("-") { InfixOp::Sub } else { None? }),
+                            |v| Some(if v == infix!(",") { InfixOp::Pair } else { None? }),
                             move |ind| infix_apply_left(
                                 ind,
-                                |v| Some(if v == infix!("*") { InfixOp::Mul } else if v == infix!("/") { InfixOp::Div } else { None? }),
+                                |v| Some(if v == infix!("&") { InfixOp::And } else if v == infix!("|") { InfixOp::Or } else { None? }),
                                 move |ind| infix_apply_left(
                                     ind,
-                                    |v| Some(if v == infix!("%") { InfixOp::Modulo } else { None? }),
-                                    apply
-                                ).boxed()
+                                    |v| Some(if v == infix!("+") { InfixOp::Add } else if v == infix!("-") { InfixOp::Sub } else { None? }),
+                                    move |ind| infix_apply_left(
+                                        ind,
+                                        |v| Some(if v == infix!("*") { InfixOp::Mul } else if v == infix!("/") { InfixOp::Div } else { None? }),
+                                        move |ind| infix_apply_left(
+                                            ind,
+                                            |v| Some(if v == infix!("%") { InfixOp::Modulo } else { None? }),
+                                            apply
+                                        )
+                                    ).boxed()
+                                )
                             ).boxed()
-                        ).boxed()
+                        )
                     ).boxed()
-                ).boxed()
+                )
             ).boxed()
-        ).boxed()
-    )
+        )
+    ).boxed()
 }
