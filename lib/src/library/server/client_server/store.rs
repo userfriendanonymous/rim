@@ -6,7 +6,7 @@ impl super::Value {
         self.store.read().await.package_meta(path).await.inspect_err(|e| println!("package_meta error: {e:?}")).map_err(Into::into)
     }
 
-    pub async fn add_package(&self, path: package::Path, meta: &package::Meta, code: &[u8]) -> Result<PackageId, package::AddError> {
+    pub async fn add_package(&self, path: package::Path, meta: &package::AddMeta, code: &[u8]) -> Result<PackageId, package::AddError> {
         self.store.write().await.add_package(path, meta, code).await.map_err(Into::into)
     }
 

@@ -1,10 +1,10 @@
 use bytes::Bytes;
-use crate::library::store::{package, PackageMetaError};
+use crate::library::store::package;
 
 use super::{HttpFut, URL};
 
 impl super::Value {
-    pub fn package_meta(&self, path: package::Path) -> impl HttpFut<Result<package::Meta, PackageMetaError>> {
+    pub fn package_meta(&self, path: package::Path) -> impl HttpFut<Result<package::Meta, package::MetaError>> {
         let f = self.client.get(format!("{URL}/store/package_meta/{path}")).send();
         async move {
             let res = f.await?;

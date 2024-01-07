@@ -2,8 +2,8 @@ use std::{path::PathBuf, sync::Arc, process::Command, io::stdout};
 
 use clap::Parser;
 use colored::{ColoredString, Colorize};
-use compiler::project;
-use crate::fs_utils::create_string_file;
+use crate::project;
+use super::fs_utils::create_string_file;
 use tokio::{fs::{File, create_dir_all, create_dir, read_dir}, io};
 
 const CONFIG: &'static str = r#"

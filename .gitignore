@@ -1,8 +1,3 @@
-compiler/target/
-compiler/Cargo.lock
-library_server/target/
-library_server/Cargo.lock
-library_server/store/
+
 target/
-exampleProject/
-test123/
+/lib/store/

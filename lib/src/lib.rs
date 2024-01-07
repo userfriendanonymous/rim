@@ -10,3 +10,4 @@ pub mod tokio_fs_utils;
 pub mod library;
 pub mod package_id;
 pub mod project;
+pub mod cli;

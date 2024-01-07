@@ -1,6 +1,6 @@
 
 use std::{collections::BTreeMap, io::Write};
-use crate::compiler::built_in_module;
+use crate::{compiler::built_in_module, library};
 use super::{LibraryServer, PackagesMap, packages_map};
 use tempfile::NamedTempFile;
 use bytes::Bytes;
@@ -49,7 +49,7 @@ pub async fn resolve(value: Value, library_server: &LibraryServer) -> Result<Res
 #[derive(Debug)]
 pub enum ResolveError {
     Http(reqwest::Error),
-    LibraryPackageMeta(LibraryPackageMetaError),
+    LibraryPackageMeta(library::store::package::MetaError),
     Zip(ZipError),
     Io(io::Error),
     Syntax(super::file_module::ResolveError),

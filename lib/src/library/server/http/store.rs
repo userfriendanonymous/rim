@@ -3,6 +3,7 @@ use axum::{Router, extract, Json, routing::get, http::StatusCode, response::Into
 use crate::{PackageId, library::store::package, fs_utils::extract_zip, tokio_fs_utils};
 use tempfile::{tempfile, tempdir};
 use super::State;
+use futures_util::StreamExt;
 
 pub fn router() -> Router<State> {
     Router::new()
@@ -43,7 +44,8 @@ pub async fn add_package(
     type E = package::AddError;
     Json((|| async {
         let mut file = tempfile().map_err(|_| E::Internal)?;
-        while let Some(chunk) = request.body_mut() {
+        let mut body_stream = request.into_body().into_data_stream();
+        while let Some(Ok(chunk)) = body_stream.next().await {
             file.write_all(&chunk).map_err(|_| E::Internal)?;
         }
         let dir = tempdir().map_err(|_| E::Internal)?;

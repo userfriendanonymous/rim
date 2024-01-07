@@ -2,7 +2,8 @@
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 use serde::{Serialize, Deserialize};
-use tokio::io;
+use tokio::fs::{create_dir_all, File};
+use tokio::io::{self, AsyncReadExt as _, AsyncWriteExt as _};
 pub use crate::library::store::package::Path;
 use crate::library::store::{package as sharedSelf, Dependency};
 use crate::{PackageId as Id, Ident};
@@ -69,7 +70,7 @@ impl super::Pointer {
         } else {
             let id = self.new_package_id().await.map_err(E::NewPackageId)?;
             let meta = Meta {
-                dependencies: meta.dependencies,
+                dependencies: meta.dependencies.clone(),
                 id,
             };
             create_dir_all(path_to_package.clone()).await.map_err(E::Io)?;

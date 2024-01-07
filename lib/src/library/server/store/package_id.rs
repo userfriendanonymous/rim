@@ -3,7 +3,7 @@ use serde::{Serialize, Deserialize};
 use crate::PackageId as Value;
 use tokio::{fs::File, io::{self, AsyncReadExt, AsyncWriteExt}};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug)]
 pub enum NewError {
     Io(io::Error),
     Serde(serde_json::Error)
