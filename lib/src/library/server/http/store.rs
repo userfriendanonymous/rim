@@ -1,6 +1,6 @@
 use std::io::Write;
 use axum::{Router, extract, Json, routing::get, http::StatusCode, response::IntoResponse, body::Body};
-use crate::{PackageId, library::store::package, fs_utils::extract_zip, tokio_fs_utils};
+use crate::{PackageId, library::store::package, fs_utils::extract_zip, tokio_fs};
 use tempfile::{tempfile, tempdir};
 use super::State;
 use futures_util::StreamExt;
@@ -51,8 +51,8 @@ pub async fn add_package(
         let dir = tempdir().map_err(|_| E::Internal)?;
         extract_zip(file, dir.path()).map_err(|_| E::Internal)?;
 
-        let meta = tokio_fs_utils::read_json::<package::AddMeta>(dir.path().join("meta.json")).await.map_err(|_| E::Internal)?;
-        let code = tokio_fs_utils::read_to_end(dir.path().join("code.zip")).await.map_err(|_| E::Internal)?;
+        let meta = tokio_fs::read_json::<package::AddMeta>(dir.path().join("meta.json")).await.map_err(|_| E::Internal)?;
+        let code = tokio_fs::read_to_end(dir.path().join("code.zip")).await.map_err(|_| E::Internal)?;
 
         state.client_server.add_package(path, &meta, &code).await
     })().await)

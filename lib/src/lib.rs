@@ -6,7 +6,7 @@ pub use package_id::Value as PackageId;
 pub mod compiler;
 pub mod ident;
 pub mod fs_utils;
-pub mod tokio_fs_utils;
+pub mod tokio_fs;
 pub mod library;
 pub mod package_id;
 pub mod project;

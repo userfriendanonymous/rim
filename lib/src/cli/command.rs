@@ -2,7 +2,7 @@ use std::{path::PathBuf, sync::Arc, process::Command, io::stdout};
 
 use clap::Parser;
 use colored::{ColoredString, Colorize};
-use crate::project;
+use crate::{project, library};
 use super::fs_utils::create_string_file;
 use tokio::{fs::{File, create_dir_all, create_dir, read_dir}, io};
 
@@ -69,16 +69,16 @@ impl Value {
             },
             Value::Build => {
                 println!("{}", "Compiling...".blue());
-                let library_server = Arc::new(project::LibraryServer::new());
-                if let Err(error) = project::Pointer::new(".".into(), "".into(), library_server).compile().await {
+                let library_client = Arc::new(library::HttpClient::new());
+                if let Err(error) = project::Pointer::new(".".into(), "".into(), library_client).compile().await {
                     println!("{} {error:?}", "Error while compiling:".red());
                 }
                 println!("{} {}", "Success!".green(), "Compiled programs are in `output/` directory.");
             },
             Value::RunJs { name } => {
                 println!("{}", "Compiling...".blue());
-                let library_server = Arc::new(project::LibraryServer::new());
-                if let Err(error) = project::Pointer::new(".".into(), "".into(), library_server).compile().await {
+                let library_client = Arc::new(library::HttpClient::new());
+                if let Err(error) = project::Pointer::new(".".into(), "".into(), library_client).compile().await {
                     println!("{} {error:?}", "Error while compiling:".red());
                 } else {
                     println!("{}", "Success! Running:".green());

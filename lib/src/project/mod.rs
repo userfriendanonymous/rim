@@ -1,29 +1,27 @@
 use std::{path::PathBuf, sync::Arc};
 use crate::compiler::{syntax::Ident, target, resolution};
-use chumsky::Parser;
 use tokio::{fs::{File, read_to_string}, io::{self, AsyncWriteExt}};
 use config::Value as Config;
 use packages_map::Value as PackagesMap;
-pub use library_server::Value as LibraryServer;
+pub use crate::library::HttpClient as LibraryClient;
 
 mod packages_map;
 mod dependency;
 mod config;
-pub mod library_server;
 mod file_module;
 
 pub struct Pointer {
     packages_cache_path: PathBuf,
     path: PathBuf,
-    library_server: Arc<LibraryServer>,
+    library_client: Arc<LibraryClient>,
 }
 
 impl Pointer {
-    pub fn new(path: PathBuf, packages_cache_path: PathBuf, library_server: Arc<LibraryServer>) -> Self {
+    pub fn new(path: PathBuf, packages_cache_path: PathBuf, library_client: Arc<LibraryClient>) -> Self {
         Self {
             path,
             packages_cache_path,
-            library_server,
+            library_client,
         }
     }
 
@@ -41,7 +39,7 @@ impl Pointer {
         let config = self.config().await.map_err(E::Config)?;
         let syntax = file_module::Ptr::new(self.path.clone(), "main".into())
             .resolve().await.map_err(E::FileModule)?;
-        let (dependencies, packages_map) = dependency::resolve_many(config.dependencies, &self.library_server).await.unwrap();
+        let (dependencies, packages_map) = dependency::resolve_many(config.dependencies, &self.library_client).await.unwrap();
         let map_item = packages_map::Item {
             dependencies,
             syntax
