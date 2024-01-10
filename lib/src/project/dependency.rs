@@ -20,9 +20,9 @@ pub struct Resolved {
 pub async fn resolve(value: Value, library_client: &LibraryClient) -> Result<Resolved, ResolveError> {
     type E = ResolveError;
     match value {
-        Value::Library(path) => {
-            let meta = library_client.package_meta(path.clone()).await.map_err(E::Http)?.map_err(E::LibraryPackageMeta)?;
-            let mut code: Bytes = library_client.package_code(path).await.map_err(E::Http)?;
+        Value::Library(path, version) => {
+            let meta = library_client.package_meta(path.clone(), version).await.map_err(E::Http)?.map_err(E::LibraryPackageMeta)?;
+            let mut code: Bytes = library_client.package_code(path, version).await.map_err(E::Http)?;
             
             let mut src_file = NamedTempFile::new().map_err(E::StdIo)?;
             src_file.write_all(&mut code).map_err(E::StdIo)?;

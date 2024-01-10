@@ -1,8 +1,23 @@
 use std::{fmt::Display, str::FromStr, collections::BTreeMap};
 use chumsky::{Parser, error::Simple};
+use clap::builder::Str;
 use serde::{Serialize, Deserialize};
 use crate::{Ident, PackageId as Id};
-use super::Dependency;
+use super::{Dependency, family};
+
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, Default)]
+pub struct Version(u32);
+
+impl Display for Version {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
+impl Version {
+    pub fn init() -> Self { Self::default() }
+    pub fn succ(&self) -> Self { Self(self.0 + 1) }
+}
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum MetaError {
@@ -18,22 +33,6 @@ pub enum CodeError {
 pub enum AddError {
     Internal,
     PathExists
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct Path(super::Path);
-
-impl Display for Path {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.0.fmt(f)
-    }
-}
-
-impl FromStr for Path {
-    type Err = Vec<Simple<char>>;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        super::Path::from_str(s).map(Self)
-    }
 }
 
 #[derive(Serialize, Deserialize)]

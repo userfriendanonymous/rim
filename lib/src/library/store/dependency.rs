@@ -1,9 +1,9 @@
 use serde::{Serialize, Deserialize};
 
-use super::package;
+use super::{package, family};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum Value {
     BuiltIn,
-    Library(package::Path),
+    Library(family::Path, package::Version),
 }

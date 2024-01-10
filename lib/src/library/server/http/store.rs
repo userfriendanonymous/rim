@@ -1,6 +1,6 @@
 use std::io::Write;
 use axum::{Router, extract, Json, routing::get, http::StatusCode, response::IntoResponse, body::Body};
-use crate::{PackageId, library::store::package, fs_utils::extract_zip, tokio_fs};
+use crate::{PackageId, library::store::{package, family}, fs_utils::extract_zip, tokio_fs};
 use tempfile::{tempfile, tempdir};
 use super::State;
 use futures_util::StreamExt;
@@ -12,18 +12,18 @@ pub fn router() -> Router<State> {
 }
 
 pub async fn package_meta(
-    extract::Path(path): extract::Path<package::Path>,
+    extract::Path((path, version)): extract::Path<(family::Path, package::Version)>,
     extract::State(state): extract::State<State>
 ) -> Json<Result<package::Meta, package::MetaError>> {
-    Json(state.client_server.package_meta(path).await)
+    Json(state.client_server.package_meta(path, version).await)
 }
 
 #[axum::debug_handler]
 pub async fn package_code(
-    extract::Path(path): extract::Path<package::Path>,
+    extract::Path((path, version)): extract::Path<(family::Path, package::Version)>,
     extract::State(state): extract::State<State>
 ) -> impl IntoResponse {
-    match state.client_server.package_code(path).await {
+    match state.client_server.package_code(path, version).await {
         Ok(data) => (
             StatusCode::OK,
             data
@@ -37,10 +37,10 @@ pub async fn package_code(
 
 #[axum::debug_handler]
 pub async fn add_package(
-    extract::Path(path): extract::Path<package::Path>,
+    extract::Path(path): extract::Path<family::Path>,
     extract::State(state): extract::State<State>,
     request: extract::Request<Body>,
-) -> Json<Result<PackageId, package::AddError>> {
+) -> Json<Result<(PackageId, package::Version), package::AddError>> {
     type E = package::AddError;
     Json((|| async {
         let mut file = tempfile().map_err(|_| E::Internal)?;

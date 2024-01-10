@@ -4,7 +4,7 @@ use bytes::Bytes;
 use tempfile::{tempdir, tempfile};
 use tokio::io;
 use zip::{ZipWriter, write::FileOptions, result::ZipError};
-use crate::{library::store::package, tokio_fs, PackageId};
+use crate::{library::store::{package, family}, tokio_fs, PackageId};
 use super::{HttpFut, URL, Fut};
 
 #[derive(Debug)]
@@ -16,8 +16,8 @@ pub enum AddPackageError {
 }
 
 impl super::Value {
-    pub fn package_meta(&self, path: package::Path) -> impl HttpFut<Result<package::Meta, package::MetaError>> {
-        let f = self.client.get(format!("{URL}/store/package_meta/{path}")).send();
+    pub fn package_meta(&self, path: family::Path, version: package::Version) -> impl HttpFut<Result<package::Meta, package::MetaError>> {
+        let f = self.client.get(format!("{URL}/store/package_meta/{path}/{version}")).send();
         async move {
             let res = f.await?;
             let text = res.text().await?;
@@ -26,16 +26,16 @@ impl super::Value {
         }
     }
 
-    pub fn package_code(&self, path: package::Path) -> impl HttpFut<Bytes> {
-        let f = self.client.get(format!("{URL}/store/package_code/{path}")).send();
+    pub fn package_code(&self, path: family::Path, version: package::Version) -> impl HttpFut<Bytes> {
+        let f = self.client.get(format!("{URL}/store/package_code/{path}/{version}")).send();
         async move {
             f.await?.bytes().await
         }
     }
     
-    pub fn add_package(&self, path: package::Path, meta: package::AddMeta, code: Vec<u8>) -> impl Fut<Result<PackageId, AddPackageError>> {
+    pub fn add_package(&self, path: family::Path, meta: package::AddMeta, code: Vec<u8>) -> impl Fut<Result<(PackageId, package::Version), AddPackageError>> {
         type E = AddPackageError;
-        async fn inner(client: reqwest::Client, path: package::Path, meta: package::AddMeta, code: Vec<u8>) -> Result<PackageId, AddPackageError> {
+        async fn inner(client: reqwest::Client, path: family::Path, meta: package::AddMeta, code: Vec<u8>) -> Result<(PackageId, package::Version), AddPackageError> {
             let mut zip_w = ZipWriter::new(tempfile().map_err(E::StdIo)?);
             zip_w.start_file("meta.json", FileOptions::default()).map_err(E::Zip)?;
             zip_w.write_all(&serde_json::to_vec(&meta).unwrap()).map_err(E::StdIo)?;

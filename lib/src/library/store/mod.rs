@@ -7,3 +7,4 @@ pub mod directory;
 pub mod package;
 pub mod path;
 pub mod dependency;
+pub mod family;
