@@ -2,7 +2,6 @@ use chumsky::{Parser, error::Simple, primitive::{just, any}};
 
 use super::space::{self, IndentBound};
 
-
 pub fn value(ind: IndentBound) -> impl Parser<char, String, Error = Simple<char>> + Clone + Sized {
     just('#')
         .ignore_then(

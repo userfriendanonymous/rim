@@ -35,10 +35,7 @@ pub enum AddError {
     PathExists
 }
 
-#[derive(Serialize, Deserialize)]
-pub struct AddMeta {
-    pub dependencies: BTreeMap<Ident, Dependency>
-}
+pub type AddMeta = crate::project::Config;
 
 #[derive(Serialize, Deserialize)]
 pub struct Meta {

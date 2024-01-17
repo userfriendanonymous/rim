@@ -15,6 +15,8 @@ pub enum AddPackageError {
     Http(reqwest::Error),
 }
 
+type AddPackageOutput = Result<Result<(PackageId, package::Version), package::AddError>, AddPackageError>;
+
 impl super::Value {
     pub fn package_meta(&self, path: family::Path, version: package::Version) -> impl HttpFut<Result<package::Meta, package::MetaError>> {
         let f = self.client.get(format!("{URL}/store/package_meta/{path}/{version}")).send();
@@ -33,9 +35,9 @@ impl super::Value {
         }
     }
     
-    pub fn add_package(&self, path: family::Path, meta: package::AddMeta, code: Vec<u8>) -> impl Fut<Result<(PackageId, package::Version), AddPackageError>> {
+    pub fn add_package(&self, path: family::Path, meta: package::AddMeta, code: Vec<u8>) -> impl Fut<AddPackageOutput> {
         type E = AddPackageError;
-        async fn inner(client: reqwest::Client, path: family::Path, meta: package::AddMeta, code: Vec<u8>) -> Result<(PackageId, package::Version), AddPackageError> {
+        async fn inner(client: reqwest::Client, path: family::Path, meta: package::AddMeta, code: Vec<u8>) -> AddPackageOutput {
             let mut zip_w = ZipWriter::new(tempfile().map_err(E::StdIo)?);
             zip_w.start_file("meta.json", FileOptions::default()).map_err(E::Zip)?;
             zip_w.write_all(&serde_json::to_vec(&meta).unwrap()).map_err(E::StdIo)?;

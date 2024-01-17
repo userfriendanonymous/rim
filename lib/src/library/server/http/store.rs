@@ -1,5 +1,5 @@
 use std::io::Write;
-use axum::{Router, extract, Json, routing::get, http::StatusCode, response::IntoResponse, body::Body};
+use axum::{Router, extract, Json, routing::{get, post}, http::StatusCode, response::IntoResponse, body::Body};
 use crate::{PackageId, library::store::{package, family}, fs_utils::extract_zip, tokio_fs};
 use tempfile::{tempfile, tempdir};
 use super::State;
@@ -9,6 +9,7 @@ pub fn router() -> Router<State> {
     Router::new()
         .route("/package_meta/:path", get(package_meta))
         .route("/package_code/:path", get(package_code))
+        .route("/add_package/:path", post(add_package))
 }
 
 pub async fn package_meta(

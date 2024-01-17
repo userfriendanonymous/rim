@@ -1,5 +1,6 @@
 
 {
+    "family": "factorial",
     "dependencies": {
         "builtIn": { "BuiltIn": null }
     },

@@ -1,6 +1,6 @@
 use std::future::Future;
 
-mod store;
+pub mod store;
 
 const URL: &'static str = "http://localhost:3000";
 

@@ -2,9 +2,9 @@ use std::{path::PathBuf, sync::Arc, process::Command, io::stdout};
 
 use clap::Parser;
 use colored::{ColoredString, Colorize};
-use crate::{project, library};
+use crate::{project, library::{self, http_client::store}};
 use super::fs_utils::create_string_file;
-use tokio::{fs::{File, create_dir_all, create_dir, read_dir}, io};
+use tokio::{fs::{File, create_dir_all, create_dir, read_dir, self}, io};
 
 const CONFIG: &'static str = r#"
 {
@@ -39,6 +39,7 @@ pub enum Value {
         at: PathBuf
     },
     Build,
+    Publish,
     RunJs {
         name: String,
     },
@@ -46,6 +47,10 @@ pub enum Value {
 
 impl Value {
     pub async fn run(self) {
+        let store_path = PathBuf::from("/Users/apple/Projects/test/rim");
+
+        let project_path = fs::canonicalize(".").await.unwrap();
+
         match self {
             Value::Init => {
                 match init().await {
@@ -70,15 +75,24 @@ impl Value {
             Value::Build => {
                 println!("{}", "Compiling...".blue());
                 let library_client = Arc::new(library::HttpClient::new());
-                if let Err(error) = project::Pointer::new(".".into(), "".into(), library_client).compile().await {
+                if let Err(error) = project::Pointer::new(project_path, store_path, library_client).build().await {
                     println!("{} {error:?}", "Error while compiling:".red());
                 }
                 println!("{} {}", "Success!".green(), "Compiled programs are in `output/` directory.");
             },
+            Value::Publish => {
+                println!("{}", "Publishing...".blue());
+                let library_client = Arc::new(library::HttpClient::new());
+                if let Err(error) = project::Pointer::new(project_path, store_path, library_client.clone()).publish().await {
+                    println!("{} {error:?}", "Error while publishing:".red());
+                } else {
+                    println!("{}", "Success!".green());
+                }
+            },
             Value::RunJs { name } => {
                 println!("{}", "Compiling...".blue());
                 let library_client = Arc::new(library::HttpClient::new());
-                if let Err(error) = project::Pointer::new(".".into(), "".into(), library_client).compile().await {
+                if let Err(error) = project::Pointer::new(project_path, store_path, library_client).build().await {
                     println!("{} {error:?}", "Error while compiling:".red());
                 } else {
                     println!("{}", "Success! Running:".green());

@@ -9,7 +9,9 @@ pub struct Value {
     pub dependencies: BTreeMap<Ident, Dependency>,
     pub targets: Targets,
     pub family: Option<library::store::family::Path>,
+    pub version: Option<library::store::package::Version>,
 }
+
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct Targets {
     pub js: JsTargets,
