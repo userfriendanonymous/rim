@@ -33,6 +33,6 @@ pub async fn create(path: impl AsRef<Path>, data: &[u8]) -> io::Result<()> {
 pub async fn create_json<T: Serialize>(path: impl AsRef<Path>, data: &T) -> io::Result<()> {
     type E = CreateJsonError;
     let mut file = File::create(path).await?;
-    file.write_all(&serde_json::to_vec(data).unwrap()).await?;
+    file.write_all(&serde_json::to_vec_pretty(data).unwrap()).await?;
     Ok(())
 }

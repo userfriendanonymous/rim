@@ -1,0 +1,7 @@
+
+let mod
+    console = builtIn.js.console
+    node = builtIn.js.node
+in
+    val nodeMain = node.fromSuper $ console.log "Hello world!"
+    val epicValue = 10

@@ -12,7 +12,7 @@ in let
         js.catch
             (js.value.string "Fatal error!" <js.bind> js.throw)
             (\e = 
-                console.warn (libr.epicValue)
+                console.warn "Caught an error:"
                 <js.bind> (\n = console.error e)
                 <js.bind> (\n = console.log "Bye!")
             )

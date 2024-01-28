@@ -7,7 +7,9 @@ impl super::Value {
     }
 
     pub async fn add_package(&self, path: family::Path, meta: &package::AddMeta, code: &[u8]) -> Result<(PackageId, package::Version), package::AddError> {
-        self.store.write().await.add_package(path, meta, code).await.map_err(Into::into)
+        self.store.write().await.add_package(path, meta, code).await
+            .inspect_err(|e| println!("add_package error: {e:?}"))
+            .map_err(Into::into)
     }
 
     pub async fn package_code(&self, path: family::Path, version: package::Version) -> Result<Vec<u8>, package::CodeError> {

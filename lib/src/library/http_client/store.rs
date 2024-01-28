@@ -1,8 +1,8 @@
-use std::io::{Write, Read};
+use std::io::{Read, Seek, Write};
 
 use bytes::Bytes;
 use tempfile::{tempdir, tempfile};
-use tokio::io;
+use tokio::{io, fs::File};
 use zip::{ZipWriter, write::FileOptions, result::ZipError};
 use crate::{library::store::{package, family}, tokio_fs, PackageId};
 use super::{HttpFut, URL, Fut};
@@ -13,9 +13,10 @@ pub enum AddPackageError {
     Io(io::Error),
     Zip(ZipError),
     Http(reqwest::Error),
+    Server(package::AddError),
 }
 
-type AddPackageOutput = Result<Result<(PackageId, package::Version), package::AddError>, AddPackageError>;
+type AddPackageOutput = Result<(PackageId, package::Version), AddPackageError>;
 
 impl super::Value {
     pub fn package_meta(&self, path: family::Path, version: package::Version) -> impl HttpFut<Result<package::Meta, package::MetaError>> {
@@ -38,17 +39,21 @@ impl super::Value {
     pub fn add_package(&self, path: family::Path, meta: package::AddMeta, code: Vec<u8>) -> impl Fut<AddPackageOutput> {
         type E = AddPackageError;
         async fn inner(client: reqwest::Client, path: family::Path, meta: package::AddMeta, code: Vec<u8>) -> AddPackageOutput {
-            let mut zip_w = ZipWriter::new(tempfile().map_err(E::StdIo)?);
+            drop(std::fs::File::create("./stuff").map_err(E::StdIo)?);
+            let file = tempfile().map_err(E::StdIo)?;
+            let mut zip_w = ZipWriter::new(file);
             zip_w.start_file("meta.json", FileOptions::default()).map_err(E::Zip)?;
             zip_w.write_all(&serde_json::to_vec(&meta).unwrap()).map_err(E::StdIo)?;
             zip_w.start_file("code.zip", FileOptions::default()).map_err(E::Zip)?;
-            zip_w.write_all(&serde_json::to_vec(&code).unwrap()).map_err(E::StdIo)?;
+            zip_w.write_all(&code).map_err(E::StdIo)?;
             let mut file = zip_w.finish().map_err(E::Zip)?;
-            let mut content = Vec::new();
-            file.read_to_end(&mut content).map_err(E::Io)?;
-            let r = client.post(format!("{URL}/store/add_package/{path}"))
-                .body(content)
+            drop(zip_w);
+            file.flush().map_err(E::StdIo)?;
+            file.rewind().map_err(E::StdIo)?;
+            let r: Result<(PackageId, package::Version), package::AddError> = client.post(format!("{URL}/store/add_package/{path}"))
+                .body(file.bytes().collect::<Result<Vec<u8>, _>>().unwrap())
                 .send().await.map_err(E::Http)?.json().await.map_err(E::Http)?;
+            let r = r.map_err(E::Server)?;
             Ok(r)
         }
         inner(self.client.clone(), path, meta, code)

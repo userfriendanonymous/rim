@@ -1,0 +1,12 @@
+{
+  "dependencies": {
+    "libr": {
+      "Library": [
+        "libr",
+        0
+      ]
+    },
+    "builtIn": "BuiltIn"
+  },
+  "id": 10
+}

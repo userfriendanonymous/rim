@@ -49,7 +49,6 @@ impl Pointer {
         
         let mut archiver = zip_archive::Archiver::new();
         archiver.set_destination(self.store_path.join("code"));
-        println!("Path to project: {}", self.path.clone().to_str().unwrap());
         archiver.push(self.path.clone());
         archiver.archive().map_err(E::Archive)?;
         let code = tokio_fs::read_to_end(self.store_path.join("code").join(self.path.with_extension("zip").file_name().unwrap())).await.map_err(E::Io)?;
@@ -74,7 +73,7 @@ async fn build_to(path: PathBuf, config: Config, syntax: Syntax, library_client:
     type E = BuildToError;
     use crate::compiler::syntax::module;
 
-    let (dependencies, packages_map) = dependency::resolve_many(config.dependencies, &library_client).await.unwrap();
+    let (dependencies, packages_map) = dependency::resolve_many(config.dependencies, &library_client).await.map_err(E::DependencyResolution)?;
     let map_item = packages_map::Item {
         dependencies,
         syntax
@@ -82,11 +81,7 @@ async fn build_to(path: PathBuf, config: Config, syntax: Syntax, library_client:
 
     // File::create("packages_map").await.unwrap().write_all(format!("{:#?}", &packages_map).as_bytes()).await.unwrap();
     
-    let packages_syntax = packages_map.to_syntax();
-    let syntax = vec![module::Item::LetIn(
-        packages_syntax,
-        map_item.to_syntax()
-    )];
+    let syntax = packages_map.to_syntax(map_item.to_syntax());
 
     // File::create("syntax").await.unwrap().write_all(format!("{:#?}", &syntax).as_bytes()).await.unwrap();
 
@@ -145,6 +140,7 @@ pub enum BuildToError {
     ValNotFound(Ident),
     Io(io::Error),
     Resolution(resolution::module::Error),
+    DependencyResolution(dependency::ResolveMapError)
 }
 
 #[derive(Debug)]

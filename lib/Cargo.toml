@@ -30,3 +30,4 @@ futures-util = "0.3.30"
 clap = { version = "4.4.11", features = ["derive"] }
 colored = "2.1.0"
 zip_archive = "1.2.2"
+zip-extensions = "0.6.2"

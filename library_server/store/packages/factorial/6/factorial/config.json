@@ -1,11 +1,5 @@
 {
   "dependencies": {
-    "libr": {
-      "Library": [
-        "libr",
-        0
-      ]
-    },
     "builtIn": "BuiltIn"
   },
   "targets": {
@@ -29,5 +23,5 @@
     }
   },
   "family": "factorial",
-  "version": 7
+  "version": 5
 }

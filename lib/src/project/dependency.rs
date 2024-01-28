@@ -2,7 +2,7 @@
 use std::{collections::BTreeMap, io::Write};
 use crate::{compiler::built_in_module, library};
 use super::{LibraryClient, PackagesMap, packages_map};
-use tempfile::NamedTempFile;
+use tempfile::{tempdir, NamedTempFile};
 use bytes::Bytes;
 use crate::{PackageId, Ident, library::store::dependency::Value};
 use tokio::io;
@@ -25,11 +25,13 @@ pub async fn resolve(value: Value, library_client: &LibraryClient) -> Result<Res
             let mut code: Bytes = library_client.package_code(path, version).await.map_err(E::Http)?;
             
             let mut src_file = NamedTempFile::new().map_err(E::StdIo)?;
+            let dir = tempdir().map_err(E::StdIo)?;
             src_file.write_all(&mut code).map_err(E::StdIo)?;
             ZipArchive::new(src_file).map_err(E::Zip)?
-                .extract("src").map_err(E::Zip)?;
+                .extract(dir.path()).map_err(E::Zip)?;
 
-            let syntax = super::file_module::Ptr::new("src".into(), "main".into())
+            let entry_path = tokio::fs::read_dir(dir.path()).await.map_err(E::Io)?.next_entry().await.map_err(E::Io)?.ok_or(E::EmptyArchive)?.path();
+            let syntax = super::file_module::Ptr::new(entry_path, "main".into())
                 .resolve().await.map_err(E::Syntax)?;
             
             Ok(Resolved {
@@ -53,7 +55,8 @@ pub enum ResolveError {
     Zip(ZipError),
     Io(io::Error),
     Syntax(super::file_module::ResolveError),
-    StdIo(std::io::Error)
+    StdIo(std::io::Error),
+    EmptyArchive,
 }
 
 #[derive(Debug)]

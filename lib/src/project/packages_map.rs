@@ -42,11 +42,11 @@ impl Value {
         self.0.append(&mut other.0)
     }
 
-    pub fn to_syntax(self) -> Syntax {
-        self.0.into_iter().fold(
-            Default::default(),
+    pub fn to_syntax(self, init: Syntax) -> Syntax {
+        self.0.into_iter().rev().fold(
+            init,
             |input, (id, item)| {
-                vec![module::Item::LetIn(input, vec![module_where(id.to_ident(), item.to_syntax())])]
+                vec![module::Item::LetIn(vec![module_where(id.to_ident(), item.to_syntax())], input)]
             }
         )
     }
