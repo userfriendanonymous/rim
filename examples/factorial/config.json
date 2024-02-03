@@ -1,17 +1,33 @@
-
 {
-    "dependencies": {
-        "builtIn": { "BuiltIn": null }
+  "dependencies": {
+    "libr": {
+      "Library": [
+        "libr",
+        0
+      ]
     },
-    "targets": {
-        "js": {
-            "node": {
-                "main": ["nodeMain", "Lazy"],
-                "mainStrict": ["nodeMain", "Strict"]
-            },
-            "browser": {
-                "main": ["browserMain", "Lazy"]
-            }
-        }
+    "builtIn": "BuiltIn"
+  },
+  "targets": {
+    "js": {
+      "node": {
+        "mainStrict": [
+          "nodeMain",
+          "Strict"
+        ],
+        "main": [
+          "nodeMain",
+          "Lazy"
+        ]
+      },
+      "browser": {
+        "main": [
+          "browserMain",
+          "Lazy"
+        ]
+      }
     }
+  },
+  "family": "factorial",
+  "version": 7
 }

@@ -1,0 +1,32 @@
+
+let from builtIn mod
+    js = js
+    from js mod
+        console = console
+        node = node
+        browser = browser
+        interval = interval
+        timeout = timeout
+in let
+    val main =
+        js.catch
+            (js.value.string "Fatal error!" <js.bind> js.throw)
+            (\e = 
+                console.warn "Caught an error:"
+                <js.bind> (\n = console.error e)
+                <js.bind> (\n = console.log "Bye!")
+            )
+in
+    val
+        nodeMain = node.fromSuper main
+        browserMain = browser.fromSuper main
+
+    # val nodeMain = node.fromSuper $
+        (interval.set 500 $ console.log "Hello everyone!")
+        <js.bind> (\id =
+            console.log id
+            <js.bind> (\n = timeout.set 6000 $
+                console.log "That's all!"
+                <js.bind> (\n = interval.clear id)
+            )
+        ) #

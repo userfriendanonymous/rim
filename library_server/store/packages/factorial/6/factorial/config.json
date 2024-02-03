@@ -1,0 +1,27 @@
+{
+  "dependencies": {
+    "builtIn": "BuiltIn"
+  },
+  "targets": {
+    "js": {
+      "node": {
+        "mainStrict": [
+          "nodeMain",
+          "Strict"
+        ],
+        "main": [
+          "nodeMain",
+          "Lazy"
+        ]
+      },
+      "browser": {
+        "main": [
+          "browserMain",
+          "Lazy"
+        ]
+      }
+    }
+  },
+  "family": "factorial",
+  "version": 5
+}
